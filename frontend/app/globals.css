@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+:root {
+  --color-primary: #2D2D2D;
+  --color-primary-50: #F5F5F5;
+  --color-primary-100: #E8E8E8;
+  --color-primary-200: #CFCFCF;
+  --color-primary-300: #ABABAB;
+  --color-primary-400: #787878;
+  --color-primary-500: #2D2D2D;
+  --color-primary-600: #262626;
+  --color-primary-700: #1F1F1F;
+  --color-primary-800: #141414;
+  --color-primary-900: #0A0A0A;
+
+  --color-secondary: #4A4A4A;
+
+  --color-neutral-50: #F8FAFC;
+  --color-neutral-100: #F1F5F9;
+  --color-neutral-200: #E2E8F0;
+  --color-neutral-300: #CBD5E1;
+  --color-neutral-400: #94A3B8;
+  --color-neutral-500: #64748B;
+  --color-neutral-600: #475569;
+  --color-neutral-700: #334155;
+  --color-neutral-800: #1E293B;
+  --color-neutral-900: #0F172A;
+
+  --color-background: #ffffff;
+  --color-foreground: #0F172A;
+  --color-border: #E2E8F0;
+  --color-card: #ffffff;
+  --color-muted: #F1F5F9;
+  --color-muted-foreground: #64748B;
+  --color-destructive: #ef4444;
+
+  --radius: 0.75rem;
+  --radius-sm: 0.5rem;
+  --radius-lg: 1rem;
+
+  --background: var(--color-background);
+  --foreground: var(--color-foreground);
+
+  /* Elevation shadows */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.03);
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.07), 0 4px 8px rgba(0,0,0,0.04);
+  --shadow-elevated: 0 4px 16px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06);
+}
+
+[data-theme="dark"] {
+  --color-background: #0D1117;
+  --color-foreground: #E6EDF3;
+  --color-card: #161B22;
+  --color-border: #21262D;
+  --color-primary: #4D4D4D;
+  --color-muted: #161B22;
+  --color-muted-foreground: #8B949E;
+  --color-neutral-50: #0D1117;
+  --color-neutral-100: #161B22;
+
+  --background: var(--color-background);
+  --foreground: var(--color-foreground);
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.2);
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.4), 0 4px 8px rgba(0,0,0,0.2);
+  --shadow-elevated: 0 4px 16px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.3);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    font-size: 1rem;
+    line-height: 1.75;
+  }
+
+  body {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5 {
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+    color: var(--color-foreground);
+  }
+
+  h1 { font-size: 2.5rem; font-weight: 700; }
+  h2 { font-size: 2rem; font-weight: 700; }
+  h3 { font-size: 1.5rem; font-weight: 600; }
+  h4 { font-size: 1.25rem; font-weight: 600; }
+  h5 { font-size: 1.125rem; font-weight: 600; }
+}
