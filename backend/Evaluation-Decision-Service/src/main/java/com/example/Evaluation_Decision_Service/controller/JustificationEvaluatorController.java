@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,7 +30,6 @@ public class JustificationEvaluatorController {
 
     private final ClaimRepository claimRepository;
     private final WorkerJustificationRepository justificationRepository;
-    private final KafkaTemplate<String, String> kafkaTemplate;
     private final JavaMailSender mailSender;
     private final S3PresignService s3PresignService;
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -157,17 +155,10 @@ public class JustificationEvaluatorController {
 
     private void publishKafka(String topic, String claimId, String workerId,
                                String decision, String notes) {
-        try {
-            String payload = MAPPER.writeValueAsString(Map.of(
-                    "claimId",  claimId,
-                    "workerId", workerId,
-                    "decision", decision,
-                    "notes",    notes != null ? notes : ""
-            ));
-            kafkaTemplate.send(topic, payload);
-        } catch (Exception e) {
-            log.error("[Justification] Kafka publish failed: {}", e.getMessage());
-        }
+        // No-op: these justification-* topics had no consumer. Retained as a
+        // harmless debug log so call sites compile unchanged after Kafka removal.
+        log.debug("[Justification] event '{}' for claim {} (worker {}, decision {}) — no-op",
+                topic, claimId, workerId, decision);
     }
 
     private JustificationWithClaimDto buildDto(Claim c, WorkerJustification j) {

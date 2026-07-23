@@ -1,7 +1,6 @@
 import threading
 import time
 import httpx
-from kafka import KafkaConsumer
 from config import settings
 from database import SessionLocal
 from services import rating_service, claim_service, geolocation_service
@@ -203,48 +202,3 @@ def retrigger_unrated_workers(db_factory):
             db.close()
     except Exception as e:
         print(f"[Startup] Error during retroactive rating: {e}")
-
-
-def start_consumer():
-    def _run():
-        retry_delay = 5
-        while True:
-            consumer = None
-            try:
-                consumer = KafkaConsumer(
-                    "worker-cv-submitted",
-                    "claim-filed",
-                    "worker-claim-response-submitted",
-                    bootstrap_servers=settings.kafka_bootstrap_servers,
-                    group_id="ai-service-group",
-                    auto_offset_reset="earliest",
-                    enable_auto_commit=True,
-                    api_version=(3, 7, 0),
-                )
-                retry_delay = 5
-                print("[Kafka Consumer] Started — listening for events...")
-                for msg in consumer:
-                    topic = msg.topic
-                    value = msg.value.decode("utf-8") if msg.value else ""
-                    print(f"[Kafka] Received: {topic} → {value}")
-
-                    if topic == "worker-cv-submitted":
-                        threading.Thread(target=handle_worker_cv_submitted, args=(value,), daemon=True).start()
-                    elif topic == "claim-filed":
-                        threading.Thread(target=handle_claim_filed, args=(value,), daemon=True).start()
-                    elif topic == "worker-claim-response-submitted":
-                        threading.Thread(target=handle_worker_claim_response, args=(value,), daemon=True).start()
-            except Exception as e:
-                print(f"[Kafka Consumer] Error: {e}. Reconnecting in {retry_delay}s...")
-            finally:
-                if consumer is not None:
-                    try:
-                        consumer.close()
-                    except Exception:
-                        pass
-            time.sleep(retry_delay)
-            retry_delay = min(retry_delay * 2, 60)
-
-    thread = threading.Thread(target=_run, daemon=True)
-    thread.start()
-    return thread

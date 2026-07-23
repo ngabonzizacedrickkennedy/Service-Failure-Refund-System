@@ -1,11 +1,16 @@
 package com.example.Evaluation_Decision_Service.kafka;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
@@ -13,38 +18,41 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class EvaluationEventPublisher {
 
-    private final KafkaTemplate<String, String> kafkaTemplate;
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private final RestTemplate restTemplate;
 
+    @Value("${internal.api-key}")
+    private String internalApiKey;
+
+    @Value("${notification.service.url}")
+    private String notificationServiceUrl;
+
+    @Value("${refund.service.url}")
+    private String refundServiceUrl;
+
+    @Value("${audit.service.url}")
+    private String auditServiceUrl;
+
+    @Async
     public void publishClaimDecision(String claimId, String workerId, String providerId, String decision) {
-        send("claim-decision", toJson(Map.of(
-                "claimId", claimId,
-                "workerId", workerId,
-                "providerId", providerId,
-                "decision", decision
-        )));
+        Map<String, String> body = new HashMap<>();
+        body.put("claimId", claimId);
+        body.put("workerId", workerId);
+        body.put("providerId", providerId);
+        body.put("decision", decision);
+
+        post(notificationServiceUrl, "/api/internal/events/claim-decision", body);
+        post(refundServiceUrl, "/api/internal/events/claim-decision", body);
+        post(auditServiceUrl, "/api/internal/events/claim-decision", body);
     }
 
-    private void send(String topic, String payload) {
+    private void post(String baseUrl, String path, Map<String, String> body) {
         try {
-            kafkaTemplate.send(topic, payload).whenComplete((result, ex) -> {
-                if (ex != null) {
-                    log.error("[Kafka] FAILED to publish to '{}': {}", topic, ex.getMessage());
-                } else {
-                    log.info("[Kafka] Published to '{}': {}", topic, payload);
-                }
-            });
+            HttpHeaders h = new HttpHeaders();
+            h.setContentType(MediaType.APPLICATION_JSON);
+            h.set("X-Internal-Key", internalApiKey);
+            restTemplate.postForEntity(baseUrl + path, new HttpEntity<>(body, h), Void.class);
         } catch (Exception e) {
-            log.error("[Kafka] Exception publishing to '{}': {}", topic, e.getMessage());
-        }
-    }
-
-    private String toJson(Map<String, String> map) {
-        try {
-            return MAPPER.writeValueAsString(map);
-        } catch (Exception e) {
-            log.error("[Kafka] Failed to serialize payload", e);
-            return "{}";
+            log.warn("[Event] POST {} failed: {}", path, e.getMessage());  // swallow — fire-and-forget
         }
     }
 }

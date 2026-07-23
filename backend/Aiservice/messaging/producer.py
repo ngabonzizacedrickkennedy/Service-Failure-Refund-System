@@ -1,25 +1,27 @@
-from kafka import KafkaProducer
+import httpx
 from config import settings
-import json
 
-_producer: KafkaProducer | None = None
-
-
-def get_producer() -> KafkaProducer:
-    global _producer
-    if _producer is None:
-        _producer = KafkaProducer(
-            bootstrap_servers=settings.kafka_bootstrap_servers,
-            value_serializer=lambda v: v.encode("utf-8") if isinstance(v, str) else json.dumps(v).encode("utf-8"),
-            key_serializer=lambda k: k.encode("utf-8") if k else None,
-            api_version=(3, 7, 0),
-        )
-    return _producer
+# Topics that map to a real Audit-and-Compliance internal endpoint.
+_AUDIT_EVENTS = {"geolocation-verified", "geolocation-flagged"}
 
 
 def publish_event(topic: str, message: str) -> None:
+    """Fire-and-forget internal event publish (replaces Kafka).
+
+    geolocation-verified / geolocation-flagged -> POST to Audit service with
+    body {"claimId": message}. All other legacy topics have no consumer and
+    are treated as a harmless no-op. Best-effort: all exceptions swallowed.
+    """
+    if topic not in _AUDIT_EVENTS:
+        print(f"[Event] No consumer for topic '{topic}' — skipping (no-op).")
+        return
+
     try:
-        get_producer().send(topic, value=message)
-        get_producer().flush()
+        httpx.post(
+            f"{settings.audit_base_url}/api/internal/events/{topic}",
+            json={"claimId": message},
+            headers={"X-Internal-Key": settings.internal_api_key},
+            timeout=10,
+        )
     except Exception as e:
-        print(f"[Kafka] Failed to publish to {topic}: {e}")
+        print(f"[Event] POST {topic} to Audit failed: {e}")

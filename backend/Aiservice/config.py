@@ -9,9 +9,8 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql://postgres:Novemba%4042@localhost:5432/ai_service_db"
 
-    kafka_bootstrap_servers: str = "localhost:9092"
-
     service2_base_url: str = "http://localhost:8082"
+    audit_base_url: str = "http://localhost:8087"
     internal_api_key: str = "ssfrs-internal-2024"
 
     port: int = 8083

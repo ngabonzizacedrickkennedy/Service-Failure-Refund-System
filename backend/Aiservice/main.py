@@ -7,8 +7,8 @@ from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 
 from database import create_tables, SessionLocal
-from messaging.consumer import start_consumer, retrigger_unrated_workers
-from routers import rating, matching, claim, geolocation, interview, chat
+from messaging.consumer import retrigger_unrated_workers
+from routers import rating, matching, claim, geolocation, interview, chat, internal_events
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_tables()
-    start_consumer()
     threading.Thread(target=retrigger_unrated_workers, args=(SessionLocal,), daemon=True).start()
     print("[SSFRS AI Service] Started on port 8083")
     yield
@@ -55,6 +54,7 @@ app.include_router(claim.router)
 app.include_router(geolocation.router)
 app.include_router(interview.router)
 app.include_router(chat.router)
+app.include_router(internal_events.router)
 
 
 @app.get("/api/health")
