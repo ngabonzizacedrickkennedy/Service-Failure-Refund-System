@@ -11,6 +11,7 @@
   "Nav": {
     "about": "Ibyerekeye",
     "services": "Serivisi",
+    "modules": "Ibice by'urubuga",
     "providers": "Abasaba serivisi",
     "workers": "Abakozi",
     "contact": "Twandikire",
@@ -42,7 +43,12 @@
     "featureContractTitle": "Gucunga amasezerano",
     "featureContractDesc": "Amasezerano ya digitale ahuza abasaba serivisi n'abakozi bafite inshingano zishyirwa mu bikorwa ku mpande zombi.",
     "featureLangTitle": "Ururimi rwinshi",
-    "featureLangDesc": "Urubuga rwose ruraboneka mu cyongereza, mu gifaransa no mu kinyarwanda, kugira ngo buri usaba serivisi n'umukozi abashe gukoresha mu rurimi rwe."
+    "featureLangDesc": "Urubuga rwose ruraboneka mu cyongereza, mu gifaransa no mu kinyarwanda, kugira ngo buri usaba serivisi n'umukozi abashe gukoresha mu rurimi rwe.",
+    "differentiatorsBadge": "Impamvu wadutoranya",
+    "programmesBadge": "Ibice by'urubuga",
+    "testimonialsBadge": "Ibitekerezo by'abakoresha",
+    "watchVideo": "Reba uko urubuga rukora",
+    "learnMore": "Menya byinshi"
   },
   "Auth": {
     "brandTagline": "Sisitemu y'Ubwishyu bw'Ibitagenze mu Serivisi",
@@ -200,7 +206,27 @@
     "contractPipeline": "Uruhererekane rw'amasezerano",
     "fullyExecuted": "Byuzuye byose",
     "awaitingValidation": "Bitegereje kwemezwa",
-    "awaitingSignatures": "Bitegereje umukono"
+    "awaitingSignatures": "Bitegereje umukono",
+    "balanceDynamics": "Impinduka z'amafaranga",
+    "balanceDynamicsSub": "Amafaranga yasubijwe ku rubuga, ku kwezi",
+    "noRefundsYet": "Nta mafaranga yasubijwe abonetse",
+    "analytics": "Isesengura",
+    "analyticsSub": "Abiyandikishije bashya mu cyumweru, ibyumweru 6 bishize",
+    "availableBalance": "Amafaranga aboneka",
+    "liveLabel": "Ubu nonaha",
+    "lockedInProjects": "Yafunzwe ku mishinga {count} ihawe abakozi",
+    "totalRefundedLabel": "Igiteranyo cyasubijwe",
+    "viewProjects": "Reba imishinga",
+    "recentTransactions": "Ibikorwa vya vuba",
+    "viewAll": "Reba byose",
+    "noTransactionsYet": "Nta bikorwa birahari",
+    "txnProjectFunded": "Umushinga washyizwemo amafaranga",
+    "txnRefundIssued": "Amafaranga yasubijwe",
+    "txnRefundPending": "Amafaranga ategereje gusubizwa",
+    "success": "Byagenze neza",
+    "pending": "Bitegereje",
+    "unknownProject": "Umushinga utazwi",
+    "platformMetrics": "Imibare y'urubuga"
   },
   "ProviderDashboard": {
     "roleBadge": "Usaba serivisi",

@@ -14,6 +14,7 @@ interface TrendLineChartProps {
   data: TrendDatum[];
   valueFormatter?: (value: number) => string;
   emptyMessage?: string;
+  height?: number;
 }
 
 const RANGE_OPTIONS: { key: string; label: string; months: number }[] = [
@@ -38,13 +39,13 @@ function navButtonStyle(enabled: boolean): React.CSSProperties {
   };
 }
 
-export default function TrendLineChart({ data, valueFormatter, emptyMessage = "No data yet" }: TrendLineChartProps) {
+export default function TrendLineChart({ data, valueFormatter, emptyMessage = "No data yet", height = 200 }: TrendLineChartProps) {
   const [range, setRange] = useState<string>("6M");
   const [offset, setOffset] = useState(0);
 
   if (data.length === 0) {
     return (
-      <div style={{ height: 220, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ height, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <p style={{ fontSize: "0.8125rem", color: "var(--color-muted-foreground)" }}>{emptyMessage}</p>
       </div>
     );
@@ -129,7 +130,7 @@ export default function TrendLineChart({ data, valueFormatter, emptyMessage = "N
         </div>
       </div>
 
-      <div style={{ height: 200 }}>
+      <div style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={visible} margin={{ top: 10, right: 8, bottom: 0, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />

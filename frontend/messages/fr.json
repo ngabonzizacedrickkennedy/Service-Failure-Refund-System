@@ -11,6 +11,7 @@
   "Nav": {
     "about": "À propos",
     "services": "Services",
+    "modules": "Modules",
     "providers": "Prestataires",
     "workers": "Employés",
     "contact": "Contact",
@@ -42,7 +43,12 @@
     "featureContractTitle": "Gestion des contrats",
     "featureContractDesc": "Les contrats numériques lient les prestataires et les employés avec une responsabilité exécutoire des deux côtés.",
     "featureLangTitle": "Accès multilingue",
-    "featureLangDesc": "La plateforme est entièrement disponible en anglais, en français et en kinyarwanda, afin que chaque prestataire et employé puisse l'utiliser dans sa propre langue."
+    "featureLangDesc": "La plateforme est entièrement disponible en anglais, en français et en kinyarwanda, afin que chaque prestataire et employé puisse l'utiliser dans sa propre langue.",
+    "differentiatorsBadge": "Pourquoi nous choisir",
+    "programmesBadge": "Nos Modules",
+    "testimonialsBadge": "Témoignages",
+    "watchVideo": "Voir la présentation de la plateforme",
+    "learnMore": "En savoir plus"
   },
   "Auth": {
     "brandTagline": "Système de Remboursement des Défaillances de Service",
@@ -200,7 +206,27 @@
     "contractPipeline": "Pipeline des contrats",
     "fullyExecuted": "Entièrement exécutés",
     "awaitingValidation": "En attente de validation",
-    "awaitingSignatures": "En attente de signatures"
+    "awaitingSignatures": "En attente de signatures",
+    "balanceDynamics": "Évolution du solde",
+    "balanceDynamicsSub": "Montant remboursé sur la plateforme, par mois",
+    "noRefundsYet": "Aucun remboursement enregistré",
+    "analytics": "Analytique",
+    "analyticsSub": "Nouvelles inscriptions par semaine, 6 dernières semaines",
+    "availableBalance": "Solde disponible",
+    "liveLabel": "En direct",
+    "lockedInProjects": "Bloqué sur {count} projets assignés",
+    "totalRefundedLabel": "Total remboursé",
+    "viewProjects": "Voir les projets",
+    "recentTransactions": "Transactions récentes",
+    "viewAll": "Tout voir",
+    "noTransactionsYet": "Aucune transaction pour le moment",
+    "txnProjectFunded": "Projet financé",
+    "txnRefundIssued": "Remboursement émis",
+    "txnRefundPending": "Remboursement en attente",
+    "success": "Réussi",
+    "pending": "En attente",
+    "unknownProject": "Projet inconnu",
+    "platformMetrics": "Statistiques de la plateforme"
   },
   "ProviderDashboard": {
     "roleBadge": "Prestataire de projet",

@@ -11,6 +11,7 @@
   "Nav": {
     "about": "About",
     "services": "Services",
+    "modules": "Modules",
     "providers": "Providers",
     "workers": "Workers",
     "contact": "Contact",
@@ -42,7 +43,12 @@
     "featureContractTitle": "Contract Management",
     "featureContractDesc": "Digital contracts link providers and workers with enforceable accountability on both sides.",
     "featureLangTitle": "Multi-Language Access",
-    "featureLangDesc": "The full platform is available in English, French, and Kinyarwanda, so every provider and worker can use it in their own language."
+    "featureLangDesc": "The full platform is available in English, French, and Kinyarwanda, so every provider and worker can use it in their own language.",
+    "differentiatorsBadge": "Why Choose Us",
+    "programmesBadge": "Our Modules",
+    "testimonialsBadge": "Testimonials",
+    "watchVideo": "Watch platform walkthrough",
+    "learnMore": "Learn more"
   },
   "Auth": {
     "brandTagline": "Service Failure Refund System",
@@ -200,7 +206,27 @@
     "contractPipeline": "Contract Pipeline",
     "fullyExecuted": "Fully Executed",
     "awaitingValidation": "Awaiting Validation",
-    "awaitingSignatures": "Awaiting Signatures"
+    "awaitingSignatures": "Awaiting Signatures",
+    "balanceDynamics": "Dynamics of the Balance",
+    "balanceDynamicsSub": "Refunded amount processed across the platform, by month",
+    "noRefundsYet": "No refunds recorded yet",
+    "analytics": "Analytics",
+    "analyticsSub": "New sign-ups per week, last 6 weeks",
+    "availableBalance": "Available Balance",
+    "liveLabel": "Live",
+    "lockedInProjects": "Locked across {count} assigned projects",
+    "totalRefundedLabel": "Total Refunded",
+    "viewProjects": "View Projects",
+    "recentTransactions": "Recent Transactions",
+    "viewAll": "View All",
+    "noTransactionsYet": "No transactions yet",
+    "txnProjectFunded": "Project Funded",
+    "txnRefundIssued": "Refund Issued",
+    "txnRefundPending": "Refund Pending",
+    "success": "Success",
+    "pending": "Pending",
+    "unknownProject": "Unknown Project",
+    "platformMetrics": "Platform Metrics"
   },
   "ProviderDashboard": {
     "roleBadge": "Project Provider",

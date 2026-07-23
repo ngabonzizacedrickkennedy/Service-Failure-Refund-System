@@ -56,6 +56,40 @@ export interface HomepageSettings {
     phone: string;
     address: string;
   };
+  valueProp: {
+    visible: boolean;
+    title: string;
+    body: string;
+  };
+  differentiators: {
+    visible: boolean;
+    title: string;
+    subtitle: string;
+    items: Array<{ title: string; description: string }>;
+  };
+  programmes: {
+    visible: boolean;
+    title: string;
+    subtitle: string;
+    items: Array<{ title: string; description: string; imageUrl: string; href: string }>;
+  };
+  testimonials: {
+    visible: boolean;
+    title: string;
+    items: Array<{ quote: string; name: string; role: string }>;
+  };
+  partners: {
+    visible: boolean;
+    title: string;
+    items: Array<{ name: string; logoUrl: string }>;
+  };
+  finalCta: {
+    visible: boolean;
+    title: string;
+    subtitle: string;
+    ctaText: string;
+    ctaHref: string;
+  };
 }
 
 export const DEFAULT_SETTINGS: HomepageSettings = {
@@ -112,6 +146,62 @@ export const DEFAULT_SETTINGS: HomepageSettings = {
     phone: "+250 788 000 000",
     address: "KG 11 Ave, Kigali, Rwanda",
   },
+  valueProp: {
+    visible: true,
+    title: "Built for accountability, not excuses.",
+    body:
+      "SSFRS exists because service failures happen — deadlines slip, work goes undelivered, trust breaks down. We built a platform where every claim is backed by evidence, every decision is auditable, and every refund is processed with the same rigor as the projects it protects.",
+  },
+  differentiators: {
+    visible: true,
+    title: "Why Choose SSFRS",
+    subtitle: "A refund process providers and workers can both trust.",
+    items: [
+      { title: "AI-Verified Evidence", description: "Every claim is checked against GPS-tagged photos, EXIF timestamps, and message history before a human ever reviews it." },
+      { title: "Escrow-Backed Funding", description: "Provider funds are held in escrow the moment a project starts, so a valid refund is never blocked by a missing payment." },
+      { title: "Independent Evaluation", description: "Claims are decided by evaluators outside the provider–worker relationship, with AI-assisted mediation reports for context." },
+      { title: "Full Audit Trail", description: "Every contract signature, status change, and refund decision is logged and available to admins in real time." },
+    ],
+  },
+  programmes: {
+    visible: true,
+    title: "Our Modules",
+    subtitle: "Every stage of a project, covered end to end.",
+    items: [
+      { title: "Claim Filing & Evidence", description: "Providers file structured claims with proof documents, ghost-project photos, and message evidence.", imageUrl: "", href: "/register" },
+      { title: "AI Mediation", description: "AI-assisted analysis cross-checks evidence and produces a mediation report for evaluators.", imageUrl: "", href: "/register" },
+      { title: "Contract Validation", description: "Digital contracts are signed by both parties and validated by admins before work begins.", imageUrl: "", href: "/register" },
+      { title: "Refund Processing", description: "Approved claims move through a dedicated refund office with full status tracking.", imageUrl: "", href: "/register" },
+    ],
+  },
+  testimonials: {
+    visible: true,
+    title: "What Our Users Say",
+    items: [
+      { quote: "The evidence-based claim process meant we didn't have to argue back and forth — the photos and timestamps spoke for themselves.", name: "Project Provider", role: "Construction" },
+      { quote: "I could see exactly why a claim was decided the way it was. Nothing felt arbitrary.", name: "Skilled Worker", role: "Software Development" },
+      { quote: "Funds being held in escrow from day one changed how confidently we take on new workers.", name: "Project Provider", role: "Design & Creative" },
+    ],
+  },
+  partners: {
+    visible: true,
+    title: "Trusted By",
+    items: [
+      { name: "", logoUrl: "" },
+      { name: "", logoUrl: "" },
+      { name: "", logoUrl: "" },
+      { name: "", logoUrl: "" },
+      { name: "", logoUrl: "" },
+      { name: "", logoUrl: "" },
+    ],
+  },
+  finalCta: {
+    visible: true,
+    title: "Ready to protect every project?",
+    subtitle: "Join providers and workers already using SSFRS to file, evaluate, and resolve service claims with full transparency.",
+    ctaText: "Create your account",
+    ctaHref: "/register",
+  },
 };
 
 async function fetchUsersFromBackend(role: string): Promise<FeaturedUser[]> {
@@ -134,8 +224,11 @@ export async function GET() {
   try {
     const res = await fetch(`${BACKEND}/api/home/settings`, { next: { revalidate: 300 } });
     if (res.ok) {
-      const saved: HomepageSettings = await res.json();
-      settings = saved;
+      const saved: Partial<HomepageSettings> = await res.json();
+      // Shallow-merge per section so rows saved before newer sections existed
+      // (valueProp, differentiators, programmes, testimonials, partners, finalCta)
+      // still fall back to defaults instead of crashing the public page.
+      settings = { ...DEFAULT_SETTINGS, ...saved };
     }
   } catch {}
 

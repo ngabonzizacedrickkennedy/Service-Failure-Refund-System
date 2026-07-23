@@ -6,6 +6,7 @@ import {
   Save, Eye, Video, BarChart2, Users, MapPin, FileText,
   RefreshCw, CheckCircle, Globe, Image as ImageIcon,
   ChevronRight, X, Search, Briefcase, HardHat,
+  Quote, Sparkles, LayoutGrid, MessageSquareQuote, Handshake, Megaphone,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { userService, type UserProfile } from "@/lib/userService";
@@ -21,16 +22,73 @@ const DEFAULT: HomepageSettings = {
   workers: { visible: true, title: "Our Skilled Workers", subtitle: "Qualified professionals delivering quality service across every sector.", featured: [] },
   map: { visible: true, title: "Find Us", description: "We operate across Rwanda, connecting service providers and skilled workers nationwide.", embedUrl: "https://www.openstreetmap.org/export/embed.html?bbox=29.9%2C-2.0%2C30.2%2C-1.8&layer=mapnik&marker=-1.9441%2C30.0619", address: "Kigali, Rwanda" },
   footer: { description: "SSFRS provides a structured approach to service failure management, ensuring fair outcomes for all parties.", email: "info@ssfrs.rw", phone: "+250 788 000 000", address: "KG 11 Ave, Kigali, Rwanda" },
+  valueProp: {
+    visible: true,
+    title: "Built for accountability, not excuses.",
+    body: "SSFRS exists because service failures happen — deadlines slip, work goes undelivered, trust breaks down. We built a platform where every claim is backed by evidence, every decision is auditable, and every refund is processed with the same rigor as the projects it protects.",
+  },
+  differentiators: {
+    visible: true,
+    title: "Why Choose SSFRS",
+    subtitle: "A refund process providers and workers can both trust.",
+    items: [
+      { title: "AI-Verified Evidence", description: "Every claim is checked against GPS-tagged photos, EXIF timestamps, and message history before a human ever reviews it." },
+      { title: "Escrow-Backed Funding", description: "Provider funds are held in escrow the moment a project starts, so a valid refund is never blocked by a missing payment." },
+      { title: "Independent Evaluation", description: "Claims are decided by evaluators outside the provider–worker relationship, with AI-assisted mediation reports for context." },
+      { title: "Full Audit Trail", description: "Every contract signature, status change, and refund decision is logged and available to admins in real time." },
+    ],
+  },
+  programmes: {
+    visible: true,
+    title: "Our Modules",
+    subtitle: "Every stage of a project, covered end to end.",
+    items: [
+      { title: "Claim Filing & Evidence", description: "Providers file structured claims with proof documents, ghost-project photos, and message evidence.", imageUrl: "", href: "/register" },
+      { title: "AI Mediation", description: "AI-assisted analysis cross-checks evidence and produces a mediation report for evaluators.", imageUrl: "", href: "/register" },
+      { title: "Contract Validation", description: "Digital contracts are signed by both parties and validated by admins before work begins.", imageUrl: "", href: "/register" },
+      { title: "Refund Processing", description: "Approved claims move through a dedicated refund office with full status tracking.", imageUrl: "", href: "/register" },
+    ],
+  },
+  testimonials: {
+    visible: true,
+    title: "What Our Users Say",
+    items: [
+      { quote: "The evidence-based claim process meant we didn't have to argue back and forth — the photos and timestamps spoke for themselves.", name: "Project Provider", role: "Construction" },
+      { quote: "I could see exactly why a claim was decided the way it was. Nothing felt arbitrary.", name: "Skilled Worker", role: "Software Development" },
+      { quote: "Funds being held in escrow from day one changed how confidently we take on new workers.", name: "Project Provider", role: "Design & Creative" },
+    ],
+  },
+  partners: {
+    visible: true,
+    title: "Trusted By",
+    items: [
+      { name: "", logoUrl: "" }, { name: "", logoUrl: "" }, { name: "", logoUrl: "" },
+      { name: "", logoUrl: "" }, { name: "", logoUrl: "" }, { name: "", logoUrl: "" },
+    ],
+  },
+  finalCta: {
+    visible: true,
+    title: "Ready to protect every project?",
+    subtitle: "Join providers and workers already using SSFRS to file, evaluate, and resolve service claims with full transparency.",
+    ctaText: "Create your account",
+    ctaHref: "/register",
+  },
 };
 
-type Tab = "hero" | "stats" | "providers" | "workers" | "map" | "footer";
+type Tab = "hero" | "valueProp" | "stats" | "differentiators" | "programmes" | "providers" | "workers" | "testimonials" | "partners" | "map" | "finalCta" | "footer";
 
 const TABS: Array<{ id: Tab; label: string; icon: React.ReactNode }> = [
   { id: "hero", label: "Hero & Video", icon: <Video style={{ width: 16, height: 16 }} /> },
+  { id: "valueProp", label: "Value Proposition", icon: <Quote style={{ width: 16, height: 16 }} /> },
   { id: "stats", label: "Statistics", icon: <BarChart2 style={{ width: 16, height: 16 }} /> },
+  { id: "differentiators", label: "Why Choose Us", icon: <Sparkles style={{ width: 16, height: 16 }} /> },
+  { id: "programmes", label: "Modules", icon: <LayoutGrid style={{ width: 16, height: 16 }} /> },
   { id: "providers", label: "Providers", icon: <Briefcase style={{ width: 16, height: 16 }} /> },
   { id: "workers", label: "Workers", icon: <HardHat style={{ width: 16, height: 16 }} /> },
+  { id: "testimonials", label: "Testimonials", icon: <MessageSquareQuote style={{ width: 16, height: 16 }} /> },
+  { id: "partners", label: "Partners", icon: <Handshake style={{ width: 16, height: 16 }} /> },
   { id: "map", label: "Map & Contact", icon: <MapPin style={{ width: 16, height: 16 }} /> },
+  { id: "finalCta", label: "Closing CTA", icon: <Megaphone style={{ width: 16, height: 16 }} /> },
   { id: "footer", label: "Footer", icon: <FileText style={{ width: 16, height: 16 }} /> },
 ];
 
@@ -104,6 +162,82 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
         }} />
       </button>
       <span style={{ fontSize: "0.875rem", color: "var(--color-foreground)", fontWeight: 500 }}>{label}</span>
+    </div>
+  );
+}
+
+/* ─── Single-image uploader (S3, path-addressed) ────────────── */
+function ImageUploadField({ path, url, onUploaded, onRemoved, label, aspect = "16/10" }: {
+  path: string; url: string; onUploaded: (url: string) => void; onRemoved: () => void; label: string; aspect?: string;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const upload = async (file: File) => {
+    setUploading(true);
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : "";
+      const form = new FormData();
+      form.append("file", file);
+      form.append("path", path);
+      const res = await fetch("/api/homepage/image", {
+        method: "POST",
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: form,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Upload failed");
+      onUploaded(data.url);
+      toast.success("Image uploaded to S3.");
+    } catch (err: unknown) {
+      toast.error((err as Error).message ?? "Image upload failed.");
+    }
+    setUploading(false);
+  };
+
+  const remove = async () => {
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : "";
+      await fetch(`/api/homepage/image?path=${encodeURIComponent(path)}`, {
+        method: "DELETE",
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
+      onRemoved();
+      toast.success("Image removed.");
+    } catch {
+      toast.error("Failed to remove image.");
+    }
+  };
+
+  return (
+    <div>
+      <input
+        ref={fileRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp"
+        style={{ display: "none" }}
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }}
+      />
+      {url ? (
+        <div style={{ position: "relative", borderRadius: 10, overflow: "hidden", border: "1px solid var(--color-border)", aspectRatio: aspect, backgroundColor: "var(--color-neutral-100)" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+          <button type="button" onClick={remove}
+            style={{ position: "absolute", top: 6, right: 6, padding: "0.2rem 0.5rem", borderRadius: 6, fontSize: 10, fontWeight: 700, backgroundColor: "rgba(239,68,68,0.92)", color: "#fff", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 3 }}>
+            <X style={{ width: 10, height: 10 }} /> Remove
+          </button>
+        </div>
+      ) : (
+        <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
+          style={{ width: "100%", aspectRatio: aspect, borderRadius: 10, border: "1.5px dashed var(--color-border)", backgroundColor: "var(--color-neutral-50)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, cursor: uploading ? "not-allowed" : "pointer", color: "var(--color-muted-foreground)" }}>
+          {uploading ? (
+            <span style={{ width: 18, height: 18, borderRadius: "50%", border: "2px solid var(--color-border)", borderTopColor: "#5B4FE5", animation: "spin 0.7s linear infinite" }} />
+          ) : (
+            <>
+              <ImageIcon style={{ width: 18, height: 18 }} />
+              <span style={{ fontSize: 11, fontWeight: 600, textAlign: "center", padding: "0 0.5rem" }}>{label}</span>
+            </>
+          )}
+        </button>
+      )}
     </div>
   );
 }
@@ -291,6 +425,52 @@ export default function HomeControllerPage() {
       items[i] = { ...items[i], ...patch };
       return { ...s, stats: { ...s.stats, items } };
     });
+
+  const setValueProp = (patch: Partial<HomepageSettings["valueProp"]>) =>
+    setSettings((s) => ({ ...s, valueProp: { ...s.valueProp, ...patch } }));
+
+  const setDifferentiators = (patch: Partial<Pick<HomepageSettings["differentiators"], "visible" | "title" | "subtitle">>) =>
+    setSettings((s) => ({ ...s, differentiators: { ...s.differentiators, ...patch } }));
+
+  const setDifferentiatorItem = (i: number, patch: Partial<{ title: string; description: string }>) =>
+    setSettings((s) => {
+      const items = [...s.differentiators.items];
+      items[i] = { ...items[i], ...patch };
+      return { ...s, differentiators: { ...s.differentiators, items } };
+    });
+
+  const setProgrammes = (patch: Partial<Pick<HomepageSettings["programmes"], "visible" | "title" | "subtitle">>) =>
+    setSettings((s) => ({ ...s, programmes: { ...s.programmes, ...patch } }));
+
+  const setProgrammeItem = (i: number, patch: Partial<{ title: string; description: string; imageUrl: string; href: string }>) =>
+    setSettings((s) => {
+      const items = [...s.programmes.items];
+      items[i] = { ...items[i], ...patch };
+      return { ...s, programmes: { ...s.programmes, items } };
+    });
+
+  const setTestimonials = (patch: Partial<Pick<HomepageSettings["testimonials"], "visible" | "title">>) =>
+    setSettings((s) => ({ ...s, testimonials: { ...s.testimonials, ...patch } }));
+
+  const setTestimonialItem = (i: number, patch: Partial<{ quote: string; name: string; role: string }>) =>
+    setSettings((s) => {
+      const items = [...s.testimonials.items];
+      items[i] = { ...items[i], ...patch };
+      return { ...s, testimonials: { ...s.testimonials, items } };
+    });
+
+  const setPartners = (patch: Partial<Pick<HomepageSettings["partners"], "visible" | "title">>) =>
+    setSettings((s) => ({ ...s, partners: { ...s.partners, ...patch } }));
+
+  const setPartnerItem = (i: number, patch: Partial<{ name: string; logoUrl: string }>) =>
+    setSettings((s) => {
+      const items = [...s.partners.items];
+      items[i] = { ...items[i], ...patch };
+      return { ...s, partners: { ...s.partners, items } };
+    });
+
+  const setFinalCta = (patch: Partial<HomepageSettings["finalCta"]>) =>
+    setSettings((s) => ({ ...s, finalCta: { ...s.finalCta, ...patch } }));
 
   const toggleFeatured = useCallback((user: UserProfile, sectionKey: "providers" | "workers") => {
     setSettings((s) => {
@@ -536,6 +716,20 @@ export default function HomeControllerPage() {
         </motion.div>
       )}
 
+      {/* VALUE PROPOSITION */}
+      {tab === "valueProp" && (
+        <motion.div key="valueProp" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={CARD}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem" }}>
+            <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.13em", color: "var(--color-muted-foreground)" }}>Value Proposition — shown right below the hero</p>
+            <Toggle checked={settings.valueProp.visible} onChange={(v) => setValueProp({ visible: v })} label="Visible" />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <Field label="Headline"><Input value={settings.valueProp.title} onChange={(v) => setValueProp({ title: v })} /></Field>
+            <Field label="Body text"><Textarea value={settings.valueProp.body} onChange={(v) => setValueProp({ body: v })} rows={4} /></Field>
+          </div>
+        </motion.div>
+      )}
+
       {/* STATS */}
       {tab === "stats" && (
         <motion.div key="stats" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={CARD}>
@@ -548,6 +742,58 @@ export default function HomeControllerPage() {
               <div key={i} style={{ padding: "1.125rem", borderRadius: 10, border: "1px solid var(--color-border)", display: "flex", flexDirection: "column", gap: "0.625rem" }}>
                 <Field label="Value (e.g. 500+)"><Input value={stat.value} onChange={(v) => setStat(i, { value: v })} placeholder="500+" /></Field>
                 <Field label="Label"><Input value={stat.label} onChange={(v) => setStat(i, { label: v })} placeholder="Service Providers" /></Field>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* DIFFERENTIATORS */}
+      {tab === "differentiators" && (
+        <motion.div key="differentiators" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={CARD}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem" }}>
+            <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.13em", color: "var(--color-muted-foreground)" }}>Why Choose Us — 4 pillars, shown with a compact preview of the hero video</p>
+            <Toggle checked={settings.differentiators.visible} onChange={(v) => setDifferentiators({ visible: v })} label="Visible" />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem", marginBottom: "1.25rem" }}>
+            <Field label="Section Title"><Input value={settings.differentiators.title} onChange={(v) => setDifferentiators({ title: v })} /></Field>
+            <Field label="Subtitle"><Input value={settings.differentiators.subtitle} onChange={(v) => setDifferentiators({ subtitle: v })} /></Field>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1rem" }}>
+            {settings.differentiators.items.map((item, i) => (
+              <div key={i} style={{ padding: "1.125rem", borderRadius: 10, border: "1px solid var(--color-border)", display: "flex", flexDirection: "column", gap: "0.625rem" }}>
+                <Field label="Title"><Input value={item.title} onChange={(v) => setDifferentiatorItem(i, { title: v })} /></Field>
+                <Field label="Description"><Textarea value={item.description} onChange={(v) => setDifferentiatorItem(i, { description: v })} rows={3} /></Field>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* PROGRAMMES / MODULES */}
+      {tab === "programmes" && (
+        <motion.div key="programmes" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={CARD}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem" }}>
+            <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.13em", color: "var(--color-muted-foreground)" }}>Modules — the platform's core workflow, shown as image tiles</p>
+            <Toggle checked={settings.programmes.visible} onChange={(v) => setProgrammes({ visible: v })} label="Visible" />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem", marginBottom: "1.25rem" }}>
+            <Field label="Section Title"><Input value={settings.programmes.title} onChange={(v) => setProgrammes({ title: v })} /></Field>
+            <Field label="Subtitle"><Input value={settings.programmes.subtitle} onChange={(v) => setProgrammes({ subtitle: v })} /></Field>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1rem" }}>
+            {settings.programmes.items.map((item, i) => (
+              <div key={i} style={{ padding: "1.125rem", borderRadius: 10, border: "1px solid var(--color-border)", display: "flex", flexDirection: "column", gap: "0.625rem" }}>
+                <ImageUploadField
+                  path={`programmes.items.${i}.imageUrl`}
+                  url={item.imageUrl}
+                  onUploaded={(url) => setProgrammeItem(i, { imageUrl: url })}
+                  onRemoved={() => setProgrammeItem(i, { imageUrl: "" })}
+                  label="Upload tile image"
+                />
+                <Field label="Title"><Input value={item.title} onChange={(v) => setProgrammeItem(i, { title: v })} /></Field>
+                <Field label="Description"><Textarea value={item.description} onChange={(v) => setProgrammeItem(i, { description: v })} rows={2} /></Field>
+                <Field label="Link"><Input value={item.href} onChange={(v) => setProgrammeItem(i, { href: v })} placeholder="/register" /></Field>
               </div>
             ))}
           </div>
@@ -654,6 +900,58 @@ export default function HomeControllerPage() {
         </motion.div>
       )}
 
+      {/* TESTIMONIALS */}
+      {tab === "testimonials" && (
+        <motion.div key="testimonials" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={CARD}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem" }}>
+            <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.13em", color: "var(--color-muted-foreground)" }}>Testimonials</p>
+            <Toggle checked={settings.testimonials.visible} onChange={(v) => setTestimonials({ visible: v })} label="Visible" />
+          </div>
+          <div style={{ marginBottom: "1.25rem" }}>
+            <Field label="Section Title"><Input value={settings.testimonials.title} onChange={(v) => setTestimonials({ title: v })} /></Field>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1rem" }}>
+            {settings.testimonials.items.map((item, i) => (
+              <div key={i} style={{ padding: "1.125rem", borderRadius: 10, border: "1px solid var(--color-border)", display: "flex", flexDirection: "column", gap: "0.625rem" }}>
+                <Field label="Quote"><Textarea value={item.quote} onChange={(v) => setTestimonialItem(i, { quote: v })} rows={3} /></Field>
+                <Field label="Name / label (e.g. Project Provider)"><Input value={item.name} onChange={(v) => setTestimonialItem(i, { name: v })} /></Field>
+                <Field label="Sector / role"><Input value={item.role} onChange={(v) => setTestimonialItem(i, { role: v })} /></Field>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* PARTNERS */}
+      {tab === "partners" && (
+        <motion.div key="partners" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={CARD}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem" }}>
+            <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.13em", color: "var(--color-muted-foreground)" }}>
+              Partners — leave a slot blank to hide it. The whole section stays hidden until at least one partner has a name.
+            </p>
+            <Toggle checked={settings.partners.visible} onChange={(v) => setPartners({ visible: v })} label="Visible" />
+          </div>
+          <div style={{ marginBottom: "1.25rem" }}>
+            <Field label="Section Title"><Input value={settings.partners.title} onChange={(v) => setPartners({ title: v })} /></Field>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem" }}>
+            {settings.partners.items.map((item, i) => (
+              <div key={i} style={{ padding: "1rem", borderRadius: 10, border: "1px solid var(--color-border)", display: "flex", flexDirection: "column", gap: "0.625rem" }}>
+                <ImageUploadField
+                  path={`partners.items.${i}.logoUrl`}
+                  url={item.logoUrl}
+                  onUploaded={(url) => setPartnerItem(i, { logoUrl: url })}
+                  onRemoved={() => setPartnerItem(i, { logoUrl: "" })}
+                  label="Upload logo"
+                  aspect="16/9"
+                />
+                <Field label="Partner name"><Input value={item.name} onChange={(v) => setPartnerItem(i, { name: v })} /></Field>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
       {/* MAP */}
       {tab === "map" && (
         <motion.div key="map" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
@@ -680,6 +978,24 @@ export default function HomeControllerPage() {
               <iframe src={settings.map.embedUrl} style={{ width: "100%", height: 320, border: "none", display: "block" }} title="Map preview" />
             </div>
           )}
+        </motion.div>
+      )}
+
+      {/* FINAL CTA */}
+      {tab === "finalCta" && (
+        <motion.div key="finalCta" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={CARD}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem" }}>
+            <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.13em", color: "var(--color-muted-foreground)" }}>Closing CTA — shown just above the footer</p>
+            <Toggle checked={settings.finalCta.visible} onChange={(v) => setFinalCta({ visible: v })} label="Visible" />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <Field label="Headline"><Input value={settings.finalCta.title} onChange={(v) => setFinalCta({ title: v })} /></Field>
+            <Field label="Subtitle"><Textarea value={settings.finalCta.subtitle} onChange={(v) => setFinalCta({ subtitle: v })} rows={2} /></Field>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem" }}>
+              <Field label="Button text"><Input value={settings.finalCta.ctaText} onChange={(v) => setFinalCta({ ctaText: v })} /></Field>
+              <Field label="Button link"><Input value={settings.finalCta.ctaHref} onChange={(v) => setFinalCta({ ctaHref: v })} placeholder="/register" /></Field>
+            </div>
+          </div>
         </motion.div>
       )}
 

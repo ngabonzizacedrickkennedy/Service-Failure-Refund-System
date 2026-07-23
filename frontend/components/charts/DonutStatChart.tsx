@@ -13,15 +13,16 @@ interface DonutStatChartProps {
   data: DonutDatum[];
   centerLabel?: string;
   emptyMessage?: string;
+  height?: number;
 }
 
-export default function DonutStatChart({ data, centerLabel = "Total", emptyMessage = "No data yet" }: DonutStatChartProps) {
+export default function DonutStatChart({ data, centerLabel = "Total", emptyMessage = "No data yet", height = 190 }: DonutStatChartProps) {
   const total = data.reduce((sum, d) => sum + d.value, 0);
   const nonZero = data.filter((d) => d.value > 0);
 
   if (total === 0) {
     return (
-      <div style={{ height: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ height, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <p style={{ fontSize: "0.8125rem", color: "var(--color-muted-foreground)" }}>{emptyMessage}</p>
       </div>
     );
@@ -29,7 +30,7 @@ export default function DonutStatChart({ data, centerLabel = "Total", emptyMessa
 
   return (
     <div>
-      <div style={{ position: "relative", height: 190 }}>
+      <div style={{ position: "relative", height }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie

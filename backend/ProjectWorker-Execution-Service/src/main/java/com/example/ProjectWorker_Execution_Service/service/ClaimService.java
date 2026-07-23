@@ -19,6 +19,8 @@ public interface ClaimService {
 
     List<ClaimResponse> getClaimsAgainstMe(UserPrincipal principal);
 
+    List<ClaimResponse> getAllClaims(UserPrincipal principal);
+
     ClaimResponse getClaimById(String claimId, UserPrincipal principal);
 
     ClaimResponse getClaimByIdInternal(String claimId);

@@ -269,6 +269,18 @@ public class ClaimServiceImpl implements ClaimService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<ClaimResponse> getAllClaims(UserPrincipal principal) {
+        if (!"ADMIN".equals(principal.getRole())) {
+            throw new ForbiddenException("Only admins can view all claims.");
+        }
+        return claimRepository.findAllByOrderByCreatedAtDesc()
+                .stream()
+                .map(c -> toResponseWithProject(c, projectRepository.findById(c.getProjectId()).orElse(null)))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ClaimResponse getClaimById(String claimId, UserPrincipal principal) {
         Claim claim = findClaim(claimId);
         boolean isProvider = claim.getProviderId().equals(principal.getUserId());

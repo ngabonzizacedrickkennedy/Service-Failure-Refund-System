@@ -20,6 +20,8 @@ public interface ClaimRepository extends JpaRepository<Claim, String> {
 
     List<Claim> findAllByStatusOrderByCreatedAtDesc(ClaimStatus status);
 
+    List<Claim> findAllByOrderByCreatedAtDesc();
+
     @Query("SELECT DISTINCT c.workerId FROM Claim c")
     List<String> findDistinctWorkerIds();
 }

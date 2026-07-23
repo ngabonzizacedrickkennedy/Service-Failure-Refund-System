@@ -98,6 +98,33 @@ public class S3UploadService {
         return key;
     }
 
+    /**
+     * Upload a generic homepage image (programme tile, partner logo, ...) to the home-images/ prefix.
+     * Returns the S3 key (not the URL) so callers can generate fresh presigned URLs.
+     */
+    public String uploadHomeImage(MultipartFile file) {
+        validateFile(file);
+
+        String extension = getExtension(file.getOriginalFilename());
+        String key = "home-images/" + UUID.randomUUID() + "." + extension;
+
+        try {
+            s3Client.putObject(
+                    PutObjectRequest.builder()
+                            .bucket(bucketName)
+                            .key(key)
+                            .contentType(file.getContentType())
+                            .contentLength(file.getSize())
+                            .build(),
+                    RequestBody.fromBytes(file.getBytes())
+            );
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to upload image file.", e);
+        }
+
+        return key;
+    }
+
     public String generatePresignedUrl(String key) {
         if (key == null || key.isBlank()) return null;
         if (key.startsWith("https://")) {

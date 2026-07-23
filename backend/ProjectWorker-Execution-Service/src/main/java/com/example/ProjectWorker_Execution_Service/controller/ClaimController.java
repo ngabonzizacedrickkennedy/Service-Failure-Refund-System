@@ -51,6 +51,12 @@ public class ClaimController {
         return ResponseEntity.ok(claimService.getClaimsAgainstMe(principal));
     }
 
+    @GetMapping("/api/claims/all")
+    public ResponseEntity<List<ClaimResponse>> getAllClaims(
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(claimService.getAllClaims(principal));
+    }
+
     @GetMapping("/api/claims/{id}")
     public ResponseEntity<ClaimResponse> getClaim(
             @PathVariable String id,
