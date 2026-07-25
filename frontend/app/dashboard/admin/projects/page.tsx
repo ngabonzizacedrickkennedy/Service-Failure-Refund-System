@@ -61,7 +61,7 @@ export default function AdminProjectsPage() {
     setExpandedId(project.id);
     if (project.assignedWorkerId && !workerNames[project.assignedWorkerId]) {
       userService.getUser(project.assignedWorkerId)
-        .then(u => setWorkerNames(prev => ({ ...prev, [project.assignedWorkerId!]: u.firstName + " " + u.lastName })))
+        .then(u => setWorkerNames(prev => ({ ...prev, [project.assignedWorkerId!]: u.fullName })))
         .catch(() => {});
     }
   };
