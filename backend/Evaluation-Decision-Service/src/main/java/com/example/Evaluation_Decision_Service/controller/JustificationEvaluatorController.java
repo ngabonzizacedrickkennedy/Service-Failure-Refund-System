@@ -34,7 +34,7 @@ public class JustificationEvaluatorController {
     private final S3PresignService s3PresignService;
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    @Value("${spring.mail.username}")
+    @Value("${app.mail.from}")
     private String fromEmail;
 
     /** All claims merged with their justification (if any) — newest first. */
