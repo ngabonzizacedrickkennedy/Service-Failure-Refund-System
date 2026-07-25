@@ -1,0 +1,16 @@
+# Python virtual environment (should never be committed)
+Lib/
+Scripts/
+Include/
+bin/
+pyvenv.cfg
+.venv/
+venv/
+
+# Python caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Local env / secrets
+.env
