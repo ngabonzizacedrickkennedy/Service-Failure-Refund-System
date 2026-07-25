@@ -1,10 +1,7 @@
-# Application properties (sensitive config - never commit)
-**/src/main/resources/application.properties
-**/src/main/resources/application.yml
-**/src/main/resources/application.yaml
-**/src/main/resources/application-*.properties
-**/src/main/resources/application-*.yml
-**/src/main/resources/application-*.yaml
+# application.properties IS committed (uses ${ENV:} placeholders — no real secrets).
+# Only the local-only secret overrides that fill those placeholders are ignored:
+**/src/main/resources/application-local.properties
+**/src/main/resources/application-secrets.properties
 
 # Java / Maven / Spring Boot
 target/
