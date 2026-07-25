@@ -16,7 +16,11 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    create_tables()
+    try:
+        create_tables()
+    except Exception as e:
+        # Don't let a DB hiccup at startup crash the whole service — boot anyway.
+        logger.warning("[Startup] create_tables failed (continuing): %s", e)
     threading.Thread(target=retrigger_unrated_workers, args=(SessionLocal,), daemon=True).start()
     print("[SSFRS AI Service] Started on port 8083")
     yield

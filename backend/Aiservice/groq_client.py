@@ -4,11 +4,20 @@ import time
 from groq import Groq, RateLimitError
 from config import settings
 
-_client = Groq(api_key=settings.groq_api_key)
+# Lazily created so the service can boot even if GROQ_API_KEY isn't set yet.
+# (AI calls will then fail at call time, but the app starts and /api/health works.)
+_client: Groq | None = None
+
+
+def _get_client() -> Groq:
+    global _client
+    if _client is None:
+        _client = Groq(api_key=settings.groq_api_key)
+    return _client
 
 
 def chat(prompt: str, temperature: float = 0.4, max_tokens: int = 1500) -> str:
-    response = _client.chat.completions.create(
+    response = _get_client().chat.completions.create(
         model=settings.groq_model,
         messages=[{"role": "user", "content": prompt}],
         temperature=temperature,
@@ -25,7 +34,7 @@ def chat_vision(prompt: str, image_urls: list[str], temperature: float = 0.3, ma
     last_error: Exception = RuntimeError("chat_vision: no attempts made")
     for attempt in range(3):
         try:
-            response = _client.chat.completions.create(
+            response = _get_client().chat.completions.create(
                 model="meta-llama/llama-4-scout-17b-16e-instruct",
                 messages=[{"role": "user", "content": content}],
                 temperature=temperature,
