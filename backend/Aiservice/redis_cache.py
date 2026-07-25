@@ -1,53 +1,35 @@
-import json
-import logging
-import redis
+"""In-process cache (no external Redis needed).
 
-logger = logging.getLogger(__name__)
+Keeps the same cache_get / cache_set / cache_delete API the rest of the app
+already uses, but stores values in memory with a per-entry TTL. Each service
+instance has its own cache; entries expire after their TTL. Fine for our scale
+and removes the Redis dependency entirely.
+"""
+import threading
+import time
 
-_client: redis.Redis | None = None
-
-
-def get_client() -> redis.Redis | None:
-    global _client
-    if _client is not None:
-        return _client
-    try:
-        client = redis.Redis(host="localhost", port=6379, decode_responses=True)
-        client.ping()
-        _client = client
-        logger.info("[Redis] Connected on localhost:6379")
-    except Exception as exc:
-        logger.warning("[Redis] Not available — caching disabled: %s", exc)
-        _client = None
-    return _client
+# key -> (expires_at_monotonic, value)
+_store: dict[str, tuple[float, object]] = {}
+_lock = threading.Lock()
 
 
 def cache_get(key: str):
-    r = get_client()
-    if r is None:
-        return None
-    try:
-        raw = r.get(key)
-        return json.loads(raw) if raw else None
-    except Exception:
-        return None
+    with _lock:
+        item = _store.get(key)
+        if item is None:
+            return None
+        expires_at, value = item
+        if expires_at < time.monotonic():
+            _store.pop(key, None)
+            return None
+        return value
 
 
 def cache_set(key: str, value, ttl: int = 300) -> None:
-    r = get_client()
-    if r is None:
-        return
-    try:
-        r.setex(key, ttl, json.dumps(value))
-    except Exception:
-        pass
+    with _lock:
+        _store[key] = (time.monotonic() + ttl, value)
 
 
 def cache_delete(key: str) -> None:
-    r = get_client()
-    if r is None:
-        return
-    try:
-        r.delete(key)
-    except Exception:
-        pass
+    with _lock:
+        _store.pop(key, None)
