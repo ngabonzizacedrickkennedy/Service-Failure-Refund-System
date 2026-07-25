@@ -11,13 +11,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -28,14 +31,19 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class JustificationEvaluatorController {
 
+    private static final String RESEND_ENDPOINT = "https://api.resend.com/emails";
+
     private final ClaimRepository claimRepository;
     private final WorkerJustificationRepository justificationRepository;
-    private final JavaMailSender mailSender;
+    private final RestTemplate restTemplate;
     private final S3PresignService s3PresignService;
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @Value("${app.mail.from}")
     private String fromEmail;
+
+    @Value("${resend.api-key:}")
+    private String resendApiKey;
 
     /** All claims merged with their justification (if any) — newest first. */
     @GetMapping
@@ -79,12 +87,12 @@ public class JustificationEvaluatorController {
             return ResponseEntity.badRequest().body(Map.of("error", "workerEmail is required"));
         }
 
-        try {
-            SimpleMailMessage msg = new SimpleMailMessage();
-            msg.setFrom(fromEmail);
-            msg.setTo(workerEmail);
-            msg.setSubject("Justification Required — Claim Against You (ID: " + claimId.substring(0, 8) + ")");
-            msg.setText(
+        if (resendApiKey == null || resendApiKey.isBlank()) {
+            log.error("[Justification] RESEND_API_KEY is not configured — cannot email worker {}", workerEmail);
+            return ResponseEntity.status(503).body(Map.of("error", "Email service is not configured."));
+        }
+
+        String text =
                 "Dear " + workerName + ",\n\n" +
                 "A claim has been filed against you regarding project work.\n\n" +
                 "Claim ID: " + claimId + "\n" +
@@ -95,13 +103,24 @@ public class JustificationEvaluatorController {
                 "Log in at: http://localhost:3000/login\n" +
                 "Go to: Dashboard → Claims Against Me\n\n" +
                 "Failure to respond may result in automatic claim approval.\n\n" +
-                "Regards,\nSSFRS Evaluation Team"
-            );
-            mailSender.send(msg);
+                "Regards,\nSSFRS Evaluation Team";
+
+        Map<String, Object> mailBody = new HashMap<>();
+        mailBody.put("from", fromEmail);
+        mailBody.put("to", List.of(workerEmail));
+        mailBody.put("subject", "Justification Required — Claim Against You (ID: " + claimId.substring(0, 8) + ")");
+        mailBody.put("text", text);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(resendApiKey);
+
+        try {
+            restTemplate.postForEntity(RESEND_ENDPOINT, new HttpEntity<>(mailBody, headers), String.class);
             log.info("[Justification] Email sent to worker {} for claim {}", workerEmail, claimId);
         } catch (Exception e) {
-            log.error("[Justification] Failed to send email: {}", e.getMessage());
-            return ResponseEntity.status(500).body(Map.of("error", "Failed to send email: " + e.getMessage()));
+            log.error("[Justification] Failed to send email to {} via Resend: {}", workerEmail, e.getMessage());
+            return ResponseEntity.status(503).body(Map.of("error", "Failed to send email: " + e.getMessage()));
         }
 
         return ResponseEntity.ok(Map.of("status", "email_sent", "recipient", workerEmail));
