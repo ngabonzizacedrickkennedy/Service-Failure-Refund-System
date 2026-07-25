@@ -45,6 +45,9 @@ public class JustificationEvaluatorController {
     @Value("${resend.api-key:}")
     private String resendApiKey;
 
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
+
     /** All claims merged with their justification (if any) — newest first. */
     @GetMapping
     @PreAuthorize("hasAuthority('EVALUATOR')")
@@ -100,7 +103,7 @@ public class JustificationEvaluatorController {
                 "You are required to log in to the platform and submit your justification " +
                 "for the service failure. Please provide a clear explanation and upload any " +
                 "supporting evidence (documents, photos, etc.).\n\n" +
-                "Log in at: http://localhost:3000/login\n" +
+                "Log in at: " + frontendUrl + "/login\n" +
                 "Go to: Dashboard → Claims Against Me\n\n" +
                 "Failure to respond may result in automatic claim approval.\n\n" +
                 "Regards,\nSSFRS Evaluation Team";
