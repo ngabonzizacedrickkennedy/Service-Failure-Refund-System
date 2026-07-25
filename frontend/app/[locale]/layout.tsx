@@ -8,6 +8,9 @@ import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 
+// Auth-gated app — render on demand instead of prerendering at build time.
+export const dynamic = "force-dynamic";
+
 const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
