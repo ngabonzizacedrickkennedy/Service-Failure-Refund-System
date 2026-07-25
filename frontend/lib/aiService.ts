@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const aiApi = axios.create({ baseURL: "http://localhost:8083" });
+const aiApi = axios.create({ baseURL: process.env.NEXT_PUBLIC_AI_API_URL || "http://localhost:8083" });
 
 export interface ImageVerificationResult {
   claim_id: string;

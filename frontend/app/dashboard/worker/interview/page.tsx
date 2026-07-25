@@ -531,7 +531,7 @@ export default function WorkerInterviewPage() {
                   if (raw && speechSupported) {
                     setRefining(true);
                     try {
-                      const res = await fetch("http://localhost:8083/api/ai/interview/refine-transcript", {
+                      const res = await fetch(`${process.env.NEXT_PUBLIC_AI_API_URL || "http://localhost:8083"}/api/ai/interview/refine-transcript`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ raw_transcript: raw, question: QUESTIONS[currentQ] }),
