@@ -152,7 +152,7 @@ def chat(request: ChatRequest):
         groq_messages.append({"role": m.role, "content": m.content})
 
     try:
-        completion = _gc._client.chat.completions.create(
+        completion = _gc._get_client().chat.completions.create(
             model=settings.groq_model,
             messages=groq_messages,
             max_tokens=1024,
