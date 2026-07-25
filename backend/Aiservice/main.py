@@ -62,6 +62,6 @@ app.include_router(chat.router)
 app.include_router(internal_events.router)
 
 
-@app.get("/api/health")
+@app.api_route("/api/health", methods=["GET", "HEAD"])
 def health():
     return {"status": "ok", "service": "SSFRS AI Engine", "port": 8083}
