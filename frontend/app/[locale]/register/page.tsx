@@ -88,49 +88,54 @@ export default function RegisterPage() {
         <p className="auth-subtitle">{t("subtitle")}</p>
 
         <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
-          <AuthField label={t("fullNameLabel")} error={errors.fullName?.message}>
+          <AuthField error={errors.fullName?.message}>
             <AuthInput
               icon={User}
               type="text"
               autoComplete="name"
-              placeholder={t("fullNamePlaceholder")}
+              placeholder={t("fullNameLabel")}
+              aria-label={t("fullNameLabel")}
               invalid={!!errors.fullName}
               {...register("fullName")}
             />
           </AuthField>
 
-          <AuthField label={t("emailLabel")} error={errors.email?.message}>
+          <AuthField error={errors.email?.message}>
             <AuthInput
               icon={Mail}
               type="email"
               autoComplete="email"
-              placeholder="you@example.com"
+              placeholder={t("emailLabel")}
+              aria-label={t("emailLabel")}
               invalid={!!errors.email}
               {...register("email")}
             />
           </AuthField>
 
-          <AuthField label={t("passwordLabel")} error={errors.password?.message}>
+          <AuthField error={errors.password?.message}>
             <AuthPasswordInput
               autoComplete="new-password"
-              placeholder="••••••••"
+              placeholder={t("passwordLabel")}
+              aria-label={t("passwordLabel")}
               invalid={!!errors.password}
               {...register("password")}
             />
           </AuthField>
 
-          <AuthField label={t("phoneLabel")} error={errors.phone?.message}>
+          <AuthField error={errors.phone?.message}>
             <AuthInput
               icon={Phone}
               type="tel"
               autoComplete="tel"
-              placeholder={t("phonePlaceholder")}
+              placeholder={t("phoneLabel")}
+              aria-label={t("phoneLabel")}
               invalid={!!errors.phone}
               {...register("phone")}
             />
           </AuthField>
 
-          <AuthField label={t("roleLabel")} error={errors.role?.message}>
+          <AuthField error={errors.role?.message}>
+            <span className="auth-sr-only">{t("roleLabel")}</span>
             <div className="auth-segmented">
               {roles.map(({ value, label, Icon }) => (
                 <button

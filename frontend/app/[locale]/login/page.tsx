@@ -102,21 +102,23 @@ export default function LoginPage() {
             <p className="auth-subtitle">{t("subtitle")}</p>
 
             <form className="auth-form" onSubmit={loginForm.handleSubmit(onLoginSubmit)}>
-              <AuthField label={t("emailLabel")} error={loginForm.formState.errors.email?.message}>
+              <AuthField error={loginForm.formState.errors.email?.message}>
                 <AuthInput
                   icon={Mail}
                   type="email"
                   autoComplete="email"
-                  placeholder={t("emailPlaceholder")}
+                  placeholder={t("emailLabel")}
+                  aria-label={t("emailLabel")}
                   invalid={!!loginForm.formState.errors.email}
                   {...loginForm.register("email")}
                 />
               </AuthField>
 
-              <AuthField label={t("passwordLabel")} error={loginForm.formState.errors.password?.message}>
+              <AuthField error={loginForm.formState.errors.password?.message}>
                 <AuthPasswordInput
                   autoComplete="current-password"
-                  placeholder="••••••••"
+                  placeholder={t("passwordLabel")}
+                  aria-label={t("passwordLabel")}
                   invalid={!!loginForm.formState.errors.password}
                   {...loginForm.register("password")}
                 />
@@ -157,7 +159,7 @@ export default function LoginPage() {
             </p>
 
             <form className="auth-form" onSubmit={otpForm.handleSubmit(onOtpSubmit)}>
-              <AuthField label={t("verificationCode")} error={otpForm.formState.errors.otp?.message}>
+              <AuthField error={otpForm.formState.errors.otp?.message}>
                 <AuthInput
                   className="auth-otp"
                   type="text"
@@ -165,6 +167,7 @@ export default function LoginPage() {
                   autoComplete="one-time-code"
                   maxLength={6}
                   placeholder="000000"
+                  aria-label={t("verificationCode")}
                   invalid={!!otpForm.formState.errors.otp}
                   {...otpForm.register("otp")}
                 />

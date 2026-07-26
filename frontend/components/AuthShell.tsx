@@ -38,19 +38,20 @@ export function AuthShell({
   );
 }
 
-/** Label + control + error message, stacked. */
+/**
+ * Groups a control with its error message. There is no visible label —
+ * the reference design is label-less, so callers pass the field name as
+ * both `placeholder` and `aria-label` on the control itself.
+ */
 export function AuthField({
-  label,
   error,
   children,
 }: {
-  label: string;
   error?: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="auth-field">
-      <label className="auth-label">{label}</label>
       {children}
       {error && <p className="auth-error">{error}</p>}
     </div>

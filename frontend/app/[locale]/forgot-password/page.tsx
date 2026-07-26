@@ -93,12 +93,13 @@ export default function ForgotPasswordPage() {
             <p className="auth-subtitle">{t("subtitle")}</p>
 
             <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
-              <AuthField label={t("emailLabel")} error={errors.email?.message}>
+              <AuthField error={errors.email?.message}>
                 <AuthInput
                   icon={Mail}
                   type="email"
                   autoComplete="email"
-                  placeholder="you@example.com"
+                  placeholder={t("emailLabel")}
+                  aria-label={t("emailLabel")}
                   invalid={!!errors.email}
                   {...register("email")}
                 />

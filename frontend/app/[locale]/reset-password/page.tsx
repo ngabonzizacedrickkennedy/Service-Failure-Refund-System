@@ -120,19 +120,21 @@ export default function ResetPasswordPage() {
             <p className="auth-subtitle">{t("subtitle")}</p>
 
             <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
-              <AuthField label={t("newPasswordLabel")} error={errors.newPassword?.message}>
+              <AuthField error={errors.newPassword?.message}>
                 <AuthPasswordInput
                   autoComplete="new-password"
-                  placeholder="••••••••"
+                  placeholder={t("newPasswordLabel")}
+                  aria-label={t("newPasswordLabel")}
                   invalid={!!errors.newPassword}
                   {...register("newPassword")}
                 />
               </AuthField>
 
-              <AuthField label={t("confirmPasswordLabel")} error={errors.confirmPassword?.message}>
+              <AuthField error={errors.confirmPassword?.message}>
                 <AuthPasswordInput
                   autoComplete="new-password"
-                  placeholder="••••••••"
+                  placeholder={t("confirmPasswordLabel")}
+                  aria-label={t("confirmPasswordLabel")}
                   invalid={!!errors.confirmPassword}
                   {...register("confirmPassword")}
                 />
