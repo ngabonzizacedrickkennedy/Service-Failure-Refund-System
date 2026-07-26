@@ -40,7 +40,8 @@ public class UserServiceImpl implements UserService {
     private final S3UploadService s3UploadService;
     private final EmailService emailService;
 
-    @Value("${app.frontend-url}")
+    // Trailing slashes stripped so link building never produces "//login".
+    @Value("#{'${app.frontend-url}'.replaceAll('/+$', '')}")
     private String frontendUrl;
 
     @Override

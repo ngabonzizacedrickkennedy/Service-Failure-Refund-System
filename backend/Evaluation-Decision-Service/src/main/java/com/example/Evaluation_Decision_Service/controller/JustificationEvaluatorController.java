@@ -6,6 +6,7 @@ import com.example.Evaluation_Decision_Service.model.JustificationStatus;
 import com.example.Evaluation_Decision_Service.model.WorkerJustification;
 import com.example.Evaluation_Decision_Service.repository.ClaimRepository;
 import com.example.Evaluation_Decision_Service.repository.WorkerJustificationRepository;
+import com.example.Evaluation_Decision_Service.service.EmailTemplates;
 import com.example.Evaluation_Decision_Service.service.S3PresignService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +46,8 @@ public class JustificationEvaluatorController {
     @Value("${resend.api-key:}")
     private String resendApiKey;
 
-    @Value("${app.frontend-url}")
+    // Trailing slashes stripped so link building never produces "//login".
+    @Value("#{'${app.frontend-url}'.replaceAll('/+$', '')}")
     private String frontendUrl;
 
     /** All claims merged with their justification (if any) — newest first. */
@@ -95,6 +97,8 @@ public class JustificationEvaluatorController {
             return ResponseEntity.status(503).body(Map.of("error", "Email service is not configured."));
         }
 
+        String loginUrl = frontendUrl + "/login";
+
         String text =
                 "Dear " + workerName + ",\n\n" +
                 "A claim has been filed against you regarding project work.\n\n" +
@@ -103,16 +107,37 @@ public class JustificationEvaluatorController {
                 "You are required to log in to the platform and submit your justification " +
                 "for the service failure. Please provide a clear explanation and upload any " +
                 "supporting evidence (documents, photos, etc.).\n\n" +
-                "Log in at: " + frontendUrl + "/login\n" +
+                "Log in at: " + loginUrl + "\n" +
                 "Go to: Dashboard → Claims Against Me\n\n" +
                 "Failure to respond may result in automatic claim approval.\n\n" +
                 "Regards,\nSSFRS Evaluation Team";
+
+        String html = EmailTemplates.page(
+                "A claim has been filed against you — submit your justification on SSFRS.",
+                "Action required",
+                "Justification required",
+                EmailTemplates.paragraph("Dear <strong>" + EmailTemplates.escape(workerName) + "</strong>,")
+                        + EmailTemplates.paragraph("A claim has been filed against you regarding project work.")
+                        + EmailTemplates.panelStart()
+                        + EmailTemplates.row("Claim ID", claimId, true)
+                        + EmailTemplates.row("Description", c.getDescription() != null ? c.getDescription() : "—", false)
+                        + EmailTemplates.panelEnd()
+                        + EmailTemplates.paragraph(
+                                "Please sign in and submit your justification for the service failure. "
+                                        + "Give a clear explanation and upload any supporting evidence "
+                                        + "(documents, photos, etc.).")
+                        + EmailTemplates.button("Submit my justification", loginUrl)
+                        + EmailTemplates.fallbackLink(loginUrl)
+                        + EmailTemplates.note("Once signed in, go to <strong>Dashboard &rarr; Claims Against Me</strong>.")
+                        + EmailTemplates.callout("danger", "Failure to respond may result in the claim being approved automatically.")
+        );
 
         Map<String, Object> mailBody = new HashMap<>();
         mailBody.put("from", fromEmail);
         mailBody.put("to", List.of(workerEmail));
         mailBody.put("subject", "Justification Required — Claim Against You (ID: " + claimId.substring(0, 8) + ")");
         mailBody.put("text", text);
+        mailBody.put("html", html);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

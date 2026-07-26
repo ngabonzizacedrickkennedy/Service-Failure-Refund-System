@@ -50,7 +50,8 @@ public class AuthServiceImpl implements AuthService {
     private final S3UploadService s3UploadService;
     private final EmailService emailService;
 
-    @Value("${app.frontend-url}")
+    // Trailing slashes stripped so link building never produces "//reset-password".
+    @Value("#{'${app.frontend-url}'.replaceAll('/+$', '')}")
     private String frontendUrl;
 
     private static final int MAX_FAILED_ATTEMPTS = 5;
