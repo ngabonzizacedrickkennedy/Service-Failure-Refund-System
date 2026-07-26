@@ -48,7 +48,9 @@
     "programmesBadge": "Our Modules",
     "testimonialsBadge": "Testimonials",
     "watchVideo": "Watch platform walkthrough",
-    "learnMore": "Learn more"
+    "learnMore": "Learn more",
+    "mostPopular": "Most popular",
+    "followUs": "Follow us"
   },
   "Auth": {
     "brandTagline": "Service Failure Refund System",

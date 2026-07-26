@@ -1,22 +1,329 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useSyncExternalStore } from "react";
 import { Link } from "@/navigation";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import {
-  ArrowRight, ChevronDown, Shield, FileCheck, RefreshCw,
-  Users, MapPin, Phone, Mail, Menu, X, Star,
-  Briefcase, Award, CheckCircle, Globe,
-  Quote, Play, Pause, ArrowUpRight, LayoutGrid,
+  ArrowRight, Menu, X, Star, Plus, Minus, Check,
+  MapPin, Phone, Mail, Moon, Sun, ImageIcon, Globe,
 } from "lucide-react";
 import type { HomepageSettings, FeaturedUser } from "../api/homepage/route";
 import { useTranslations } from "next-intl";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
-const ACCENT = "#00A5E2";
+/* ── Design tokens ────────────────────────────────────────────────────────
+   Dark forest-green canvas, near-black chrome, one blue accent. Declared
+   once here and consumed through the class names in HOME_CSS below.        */
+const HOME_CSS = `
+.hp {
+  --hp-green: #143A2E;
+  --hp-green-soft: #1A4737;
+  --hp-black: #0A0A0A;
+  --hp-blue: #2F6BFF;
+  --hp-gold: #D9A441;
+  --hp-muted: #A5BAAF;
+  --hp-line: rgba(255,255,255,0.10);
+  background: var(--hp-green);
+  color: #fff;
+  overflow-x: hidden;
+}
+/* Keeps the page's own colour behind any overscroll / short-content gap
+   instead of the white body default. */
+body:has(.hp) { background: #0A0A0A; }
+.hp h1, .hp h2, .hp h3, .hp h4 { color: #fff; }
+.hp section { padding: 6rem 1.5rem; }
+.hp-wrap { max-width: 1240px; margin: 0 auto; width: 100%; }
 
+/* ── Chrome ── */
+.hp-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: var(--hp-black);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1.5rem; padding: 1.15rem 2.5rem;
+}
+.hp-mark {
+  font-size: 1.05rem; font-weight: 800; letter-spacing: 0.16em;
+  color: #fff; text-decoration: none; white-space: nowrap;
+}
+.hp-nav-links { display: none; align-items: center; gap: 2.25rem; }
+@media (min-width: 1080px) { .hp-nav-links { display: flex; } }
+.hp-nav-link {
+  background: none; border: none; padding: 0; cursor: pointer;
+  font-size: 1rem; font-weight: 500; color: #fff; opacity: 0.92;
+  transition: opacity 0.15s; white-space: nowrap;
+}
+.hp-nav-link:hover { opacity: 0.65; }
+.hp-nav-right { display: none; align-items: center; gap: 1rem; }
+@media (min-width: 1080px) { .hp-nav-right { display: flex; } }
+.hp-icon-btn {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,0.22); background: transparent;
+  color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.hp-icon-btn:hover { background: rgba(255,255,255,0.1); }
+.hp-signin {
+  padding: 0.7rem 1.6rem; border-radius: 999px; background: var(--hp-blue);
+  color: #fff; font-size: 0.9375rem; font-weight: 700; text-decoration: none;
+  white-space: nowrap; transition: filter 0.15s;
+}
+.hp-signin:hover { filter: brightness(1.12); }
+.hp-burger { display: flex; background: none; border: none; color: #fff; cursor: pointer; }
+@media (min-width: 1080px) { .hp-burger { display: none; } }
+.hp-drawer {
+  position: fixed; top: 70px; left: 0; right: 0; z-index: 99;
+  background: var(--hp-black); padding: 1.5rem;
+  display: flex; flex-direction: column; gap: 1.25rem;
+  border-top: 1px solid var(--hp-line);
+}
+
+/* ── Type scale ── */
+.hp-eyebrow {
+  font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--hp-muted); margin-bottom: 1.1rem;
+}
+.hp-h1 {
+  font-size: clamp(2.4rem, 5vw, 4rem); font-weight: 800; line-height: 1.02;
+  letter-spacing: -0.02em; text-transform: uppercase; margin-bottom: 1.5rem;
+}
+.hp-h2 {
+  font-size: clamp(1.9rem, 3.6vw, 3rem); font-weight: 800; line-height: 1.06;
+  letter-spacing: -0.02em; text-transform: uppercase; margin-bottom: 1rem;
+}
+.hp-h3 {
+  font-size: clamp(1.4rem, 2.4vw, 2.05rem); font-weight: 800; line-height: 1.1;
+  letter-spacing: -0.015em; text-transform: uppercase; margin-bottom: 1rem;
+}
+.hp-lead { font-size: 1.0625rem; line-height: 1.7; color: var(--hp-muted); }
+.hp-body { font-size: 0.9688rem; line-height: 1.75; color: var(--hp-muted); }
+.hp-center { text-align: center; }
+.hp-center .hp-lead { max-width: 44rem; margin-left: auto; margin-right: auto; }
+.hp-head { margin-bottom: 3.5rem; }
+
+/* ── Buttons ── */
+.hp-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  padding: 1rem 2.25rem; border-radius: 999px; font-size: 1rem; font-weight: 700;
+  text-decoration: none; cursor: pointer; white-space: nowrap;
+  transition: filter 0.15s, background 0.15s, color 0.15s;
+}
+.hp-btn-primary { background: var(--hp-blue); color: #fff; border: none; }
+.hp-btn-primary:hover { filter: brightness(1.12); }
+.hp-btn-ghost { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,0.45); }
+.hp-btn-ghost:hover { background: rgba(255,255,255,0.1); }
+.hp-inline-link {
+  display: inline-flex; align-items: center; gap: 0.5rem; font-size: 1rem; font-weight: 700;
+  color: #fff; text-decoration: none; padding-bottom: 0.35rem;
+  border-bottom: 1.5px solid rgba(255,255,255,0.5); transition: border-color 0.15s;
+}
+.hp-inline-link:hover { border-bottom-color: #fff; }
+
+/* ── Hero ── */
+.hp-hero { padding-top: 9.5rem !important; padding-bottom: 5rem !important; }
+.hp-hero-grid { display: grid; grid-template-columns: 1fr; gap: 3rem; align-items: center; }
+@media (min-width: 980px) { .hp-hero-grid { grid-template-columns: 1fr 1fr; gap: 4rem; } }
+.hp-hero-actions { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 2.5rem; }
+.hp-collage { position: relative; width: 100%; aspect-ratio: 1 / 0.9; min-height: 340px; }
+.hp-collage figure {
+  position: absolute; border-radius: 16px; overflow: hidden; margin: 0;
+  box-shadow: 0 26px 60px rgba(0,0,0,0.42);
+}
+.hp-collage figure:nth-child(1) { top: 0; right: 0; width: 74%; height: 58%; transform: rotate(-1.2deg); z-index: 1; }
+.hp-collage figure:nth-child(2) { bottom: 8%; left: 0; width: 58%; height: 50%; transform: rotate(2.6deg); z-index: 3; }
+.hp-collage figure:nth-child(3) { bottom: 0; right: 2%; width: 54%; height: 46%; transform: rotate(-2.4deg); z-index: 2; }
+.hp-collage img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hp-tag {
+  position: absolute; left: 14px; bottom: 14px; padding: 0.4rem 0.95rem; border-radius: 999px;
+  background: rgba(10,10,10,0.72); backdrop-filter: blur(6px);
+  font-size: 0.8125rem; font-weight: 700; color: #fff;
+}
+
+/* Placeholder shown until an admin uploads the real image. */
+.hp-ph {
+  width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(140deg, #1E5142 0%, #163E31 100%);
+  color: rgba(255,255,255,0.28);
+}
+
+/* ── Numbered step cards ── */
+/* auto-fit, so three cards sit in a row of three and four in a row of four
+   instead of leaving a hole in a fixed 3-column track. */
+.hp-grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(265px, 1fr)); gap: 1.75rem; }
+.hp-step {
+  display: flex; flex-direction: column; text-decoration: none;
+  border: 1px solid var(--hp-line); border-radius: 18px; overflow: hidden;
+  background: rgba(255,255,255,0.02); transition: transform 0.2s, border-color 0.2s;
+}
+.hp-step:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.24); }
+.hp-step-media { position: relative; aspect-ratio: 16 / 11; }
+.hp-step-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hp-step-no {
+  position: absolute; top: 14px; left: 14px; width: 42px; height: 42px; border-radius: 50%;
+  background: rgba(10,10,10,0.72); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.875rem; font-weight: 700; color: #fff;
+}
+.hp-step-body { padding: 1.75rem 1.5rem 2rem; }
+.hp-step-body h4 {
+  font-size: 1.1875rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: -0.01em; margin-bottom: 0.75rem;
+}
+
+/* ── Alternating feature rows ── */
+.hp-row { display: grid; grid-template-columns: 1fr; gap: 2.5rem; align-items: center; margin-bottom: 6rem; }
+.hp-row:last-child { margin-bottom: 0; }
+@media (min-width: 980px) { .hp-row { grid-template-columns: 1fr 1fr; gap: 4.5rem; } }
+.hp-row-media { border-radius: 18px; overflow: hidden; aspect-ratio: 16 / 11; }
+.hp-row-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+@media (min-width: 980px) { .hp-row.flip .hp-row-media { order: 2; } }
+
+/* ── Stats ── */
+.hp-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2.5rem; }
+@media (min-width: 860px) { .hp-stats { grid-template-columns: repeat(4, 1fr); } }
+.hp-stat-value {
+  font-size: clamp(2.4rem, 4.6vw, 3.4rem); font-weight: 800; line-height: 1;
+  letter-spacing: -0.03em; margin-bottom: 0.6rem;
+}
+.hp-stat-label {
+  font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--hp-muted);
+}
+.hp-stat-rule { width: 34px; height: 2px; background: var(--hp-blue); margin-top: 1rem; border-radius: 999px; }
+
+/* ── Card grids (people, testimonials, packages) ── */
+.hp-card {
+  background: var(--hp-green-soft); border: 1px solid var(--hp-line);
+  border-radius: 18px; padding: 1.9rem;
+}
+.hp-grid-4 { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+@media (min-width: 640px) { .hp-grid-4 { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1100px) { .hp-grid-4 { grid-template-columns: repeat(4, 1fr); } }
+.hp-people { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 1.25rem; }
+.hp-avatar {
+  width: 46px; height: 46px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+  background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;
+  font-weight: 800; color: #fff;
+}
+.hp-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.hp-stars { display: flex; gap: 3px; margin-bottom: 1.25rem; color: var(--hp-gold); }
+.hp-quote { font-size: 1rem; line-height: 1.7; color: #E6EFE9; margin-bottom: 1.75rem; }
+.hp-chip {
+  display: inline-block; font-size: 0.6875rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.1em; padding: 3px 10px; border-radius: 999px;
+  background: rgba(255,255,255,0.1); color: #CFE0D7;
+}
+
+/* ── Packages ── */
+.hp-pkg { position: relative; display: flex; flex-direction: column; }
+.hp-pkg-popular { border-color: rgba(255,255,255,0.3); }
+.hp-pkg-badge {
+  position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
+  padding: 0.45rem 1.15rem; border-radius: 999px; background: #fff; color: var(--hp-black);
+  font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+  white-space: nowrap;
+}
+.hp-pkg h4 { font-size: 1.375rem; font-weight: 800; text-transform: uppercase; margin-bottom: 0.5rem; }
+.hp-pkg-price {
+  font-size: 1.375rem; font-weight: 800; text-transform: uppercase;
+  margin: 1.75rem 0 1.5rem;
+}
+.hp-pkg ul { list-style: none; display: flex; flex-direction: column; gap: 0.85rem; flex: 1; margin-bottom: 2rem; }
+.hp-pkg li { display: flex; gap: 0.7rem; align-items: flex-start; font-size: 0.9375rem; color: #DCE8E1; }
+.hp-pkg li svg { flex-shrink: 0; margin-top: 3px; color: var(--hp-blue); }
+
+/* ── FAQ ── */
+.hp-faq { max-width: 860px; margin: 0 auto; }
+.hp-faq-item { border-bottom: 1px solid var(--hp-line); }
+.hp-faq-q {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem;
+  padding: 1.6rem 0; background: none; border: none; cursor: pointer; text-align: left;
+  font-size: 1.0625rem; font-weight: 700; color: #fff;
+}
+.hp-faq-q svg { flex-shrink: 0; color: #fff; }
+.hp-faq-a { overflow: hidden; }
+.hp-faq-a p { padding-bottom: 1.6rem; max-width: 68ch; }
+
+/* ── Map / contact ── */
+.hp-map { display: grid; grid-template-columns: 1fr; gap: 2.5rem; align-items: start; }
+@media (min-width: 980px) { .hp-map { grid-template-columns: 380px 1fr; gap: 3.5rem; } }
+.hp-contact-row { display: flex; gap: 0.9rem; align-items: flex-start; margin-bottom: 1.15rem; }
+.hp-contact-row svg { flex-shrink: 0; margin-top: 4px; color: var(--hp-blue); }
+.hp-map-frame {
+  border-radius: 18px; overflow: hidden; border: 1px solid var(--hp-line);
+  min-height: 420px; background: var(--hp-green-soft);
+}
+
+/* ── Partners ── */
+.hp-partners { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2.5rem 3.5rem; }
+.hp-partners > * { height: 38px; display: flex; align-items: center; opacity: 0.55; }
+.hp-partners img { height: 100%; width: auto; object-fit: contain; filter: grayscale(100%) brightness(3); }
+
+/* ── Footer ── */
+.hp-footer { background: var(--hp-black); padding: 5.5rem 1.5rem 2.5rem; }
+.hp-footer-grid { display: grid; grid-template-columns: 1fr; gap: 3rem; margin-bottom: 4rem; }
+@media (min-width: 760px) { .hp-footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr; gap: 2.5rem; } }
+.hp-footer h5 {
+  font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--hp-muted); margin-bottom: 1.4rem;
+}
+.hp-footer-links { display: flex; flex-direction: column; gap: 0.9rem; }
+.hp-footer-links a, .hp-footer-links span {
+  color: #D5DED9; font-size: 1rem; text-decoration: none; transition: color 0.15s;
+}
+.hp-footer-links a:hover { color: #fff; }
+.hp-socials { display: flex; gap: 0.75rem; }
+.hp-social {
+  width: 46px; height: 46px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.22);
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  text-decoration: none; transition: background 0.15s;
+}
+.hp-social:hover { background: rgba(255,255,255,0.1); }
+.hp-copy {
+  border-top: 1px solid rgba(255,255,255,0.09); padding-top: 2rem;
+  font-size: 0.875rem; color: #8A9791;
+}
+
+@media (max-width: 640px) {
+  .hp section { padding: 4rem 1.25rem; }
+  .hp-hero { padding-top: 7.5rem !important; }
+  .hp-head { margin-bottom: 2.5rem; }
+  .hp-row { margin-bottom: 4rem; }
+  .hp-btn { width: 100%; }
+  .hp-nav { padding: 1rem 1.25rem; }
+}
+@keyframes hp-spin { to { transform: rotate(360deg); } }
+
+/* Entrance animation is pure CSS with fill-mode both, so the end state is
+   "visible" even if the animation never runs. Never gate copy on JS. */
+@keyframes hp-in {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: none; }
+}
+.hp-reveal { animation: hp-in 0.55s ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .hp-reveal { animation: none; }
+}
+`;
+
+/* ── Small building blocks ───────────────────────────────────────────────── */
+
+function Media({ src, alt }: { src: string; alt: string }) {
+  const [broken, setBroken] = useState(false);
+  if (!src || broken) {
+    return (
+      <div className="hp-ph">
+        <ImageIcon size={30} />
+      </div>
+    );
+  }
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={src} alt={alt} onError={() => setBroken(true)} />;
+}
+
+/** Counts up on first scroll into view. Starts *at* the target so the real
+ *  figure shows even if the observer never fires (no JS, reduced motion). */
 function Counter({ target }: { target: string }) {
-  const [display, setDisplay] = useState("0");
+  const [display, setDisplay] = useState(target);
   const ref = useRef<HTMLSpanElement>(null);
   const started = useRef(false);
 
@@ -29,12 +336,10 @@ function Counter({ target }: { target: string }) {
         const num = parseInt(target.replace(/[^0-9]/g, "")) || 0;
         const suffix = target.replace(/[0-9,]/g, "").trim();
         const start = Date.now();
-        const dur = 1800;
         const tick = () => {
-          const p = Math.min((Date.now() - start) / dur, 1);
+          const p = Math.min((Date.now() - start) / 1800, 1);
           const ease = 1 - Math.pow(1 - p, 3);
-          const val = Math.round(ease * num);
-          setDisplay(val.toLocaleString() + suffix);
+          setDisplay(Math.round(ease * num).toLocaleString() + suffix);
           if (p < 1) requestAnimationFrame(tick);
         };
         requestAnimationFrame(tick);
@@ -48,402 +353,317 @@ function Counter({ target }: { target: string }) {
   return <span ref={ref}>{display}</span>;
 }
 
-function PersonCard({ user, index, providerLabel, workerLabel }: { user: FeaturedUser; index: number; providerLabel: string; workerLabel: string }) {
-  const [imgErr, setImgErr] = useState(false);
+function Reveal({ children, delay = 0, className = "" }: {
+  children: React.ReactNode; delay?: number; className?: string;
+}) {
+  return (
+    <div className={`hp-reveal ${className}`.trim()} style={{ animationDelay: `${delay}s` }}>
+      {children}
+    </div>
+  );
+}
+
+function SectionHead({ eyebrow, title, lead }: { eyebrow?: string; title: string; lead?: string }) {
+  return (
+    <Reveal>
+      <div className="hp-head hp-center">
+        {eyebrow && <p className="hp-eyebrow">{eyebrow}</p>}
+        <h2 className="hp-h2">{title}</h2>
+        {lead && <p className="hp-lead">{lead}</p>}
+      </div>
+    </Reveal>
+  );
+}
+
+function PersonCard({ user, providerLabel, workerLabel }: {
+  user: FeaturedUser; providerLabel: string; workerLabel: string;
+}) {
+  const [broken, setBroken] = useState(false);
   const initial = user.fullName?.charAt(0).toUpperCase() || "U";
-  const bg = user.role === "PROVIDER" ? "#E3F4FB" : "#CCFBF1";
-  const color = user.role === "PROVIDER" ? ACCENT : "#0D9488";
-
   return (
-    <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.45, delay: index * 0.07 }}
-      style={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: 16, padding: "1.5rem 1.25rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem", boxShadow: "0 2px 8px rgba(0,0,0,0.06)", transition: "box-shadow 0.2s, transform 0.2s", cursor: "default" }}
-      whileHover={{ y: -4, boxShadow: "0 8px 24px rgba(0,0,0,0.10)" }}>
-      <div style={{ width: 72, height: 72, borderRadius: "50%", overflow: "hidden", border: `2.5px solid ${color}40`, backgroundColor: bg, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        {user.profileImageUrl && !imgErr ? (
+    <div className="hp-card" style={{ padding: "1.5rem 1.25rem", textAlign: "center" }}>
+      <div className="hp-avatar" style={{ width: 68, height: 68, margin: "0 auto 1rem", fontSize: "1.4rem" }}>
+        {user.profileImageUrl && !broken ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={user.profileImageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={() => setImgErr(true)} />
-        ) : (
-          <span style={{ fontSize: "1.5rem", fontWeight: 800, color }}>{initial}</span>
-        )}
+          <img src={user.profileImageUrl} alt="" onError={() => setBroken(true)} />
+        ) : initial}
       </div>
-      <div style={{ textAlign: "center" }}>
-        <p style={{ fontWeight: 700, fontSize: "0.9375rem", color: "#1F1F1F", marginBottom: 4 }}>{user.fullName}</p>
-        {user.title && <p style={{ fontSize: "0.8125rem", color: "#64748B", marginBottom: 4 }}>{user.title}</p>}
-        <span style={{ display: "inline-block", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", padding: "2px 10px", borderRadius: 999, backgroundColor: bg, color }}>
-          {user.role === "PROVIDER" ? providerLabel : workerLabel}
-        </span>
-      </div>
-    </motion.div>
+      <p style={{ fontWeight: 700, marginBottom: 4 }}>{user.fullName}</p>
+      {user.title && <p className="hp-body" style={{ fontSize: "0.8125rem", marginBottom: 8 }}>{user.title}</p>}
+      <span className="hp-chip">{user.role === "PROVIDER" ? providerLabel : workerLabel}</span>
+    </div>
   );
 }
 
-function CompactVideoCard({ videoUrl, label }: { videoUrl: string; label: string }) {
-  const [playing, setPlaying] = useState(true);
-  const ref = useRef<HTMLVideoElement>(null);
-
-  const toggle = () => {
-    const el = ref.current;
-    if (!el) return;
-    if (playing) el.pause(); else el.play();
-    setPlaying(!playing);
-  };
-
+function FaqRow({ question, answer }: { question: string; answer: string }) {
+  const [open, setOpen] = useState(false);
   return (
-    <motion.div initial={{ opacity: 0, x: 24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
-      style={{ position: "relative", borderRadius: 18, overflow: "hidden", aspectRatio: "4/5", maxHeight: 380, background: "#1F1F1F", boxShadow: "0 12px 36px rgba(31,31,31,0.18)", border: "1px solid #E2E8F0" }}>
-      <video ref={ref} autoPlay muted loop playsInline src={videoUrl} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,15,15,0.55) 0%, rgba(15,15,15,0) 45%)" }} />
-      <button onClick={toggle} aria-label={label}
-        style={{ position: "absolute", bottom: 16, left: 16, display: "flex", alignItems: "center", gap: 8, padding: "0.5rem 0.875rem", borderRadius: 999, border: "1px solid rgba(255,255,255,0.3)", backgroundColor: "rgba(31,31,31,0.55)", backdropFilter: "blur(6px)", color: "#fff", cursor: "pointer", fontSize: 12, fontWeight: 600 }}>
-        {playing ? <Pause style={{ width: 13, height: 13 }} /> : <Play style={{ width: 13, height: 13 }} />}
-        {label}
+    <div className="hp-faq-item">
+      <button className="hp-faq-q" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+        {question}
+        {open ? <Minus size={20} /> : <Plus size={20} />}
       </button>
-    </motion.div>
+      <motion.div
+        className="hp-faq-a"
+        initial={false}
+        animate={{ height: open ? "auto" : 0, opacity: open ? 1 : 0 }}
+        transition={{ duration: 0.25 }}
+      >
+        <p className="hp-body">{answer}</p>
+      </motion.div>
+    </div>
   );
 }
 
-function FeatureCard({ icon, title, desc, delay }: { icon: React.ReactNode; title: string; desc: string; delay: number }) {
-  return (
-    <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.45, delay }}
-      style={{ background: "#fff", borderRadius: 16, padding: "2rem", border: "1px solid #E2E8F0", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
-      <div style={{ width: 48, height: 48, borderRadius: 14, marginBottom: "1.25rem", backgroundColor: "#E3F4FB", display: "flex", alignItems: "center", justifyContent: "center" }}>{icon}</div>
-      <h4 style={{ fontWeight: 700, color: "#1F1F1F", marginBottom: "0.5rem" }}>{title}</h4>
-      <p style={{ fontSize: "0.875rem", color: "#64748B", lineHeight: 1.7 }}>{desc}</p>
-    </motion.div>
-  );
-}
+/* lucide-react 1.x dropped brand glyphs, so anything without a neutral
+   equivalent falls back to the globe. */
+const SOCIAL_ICONS: Record<string, React.ReactNode> = {
+  x: <X size={18} />,
+  twitter: <X size={18} />,
+  email: <Mail size={18} />,
+  mail: <Mail size={18} />,
+};
+
+/* ── Page ────────────────────────────────────────────────────────────────── */
 
 export default function HomePage() {
   const t = useTranslations("Home");
   const tNav = useTranslations("Nav");
   const [settings, setSettings] = useState<HomepageSettings | null>(null);
   const [navOpen, setNavOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const { scrollY } = useScroll();
-  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
 
   useEffect(() => {
     fetch("/api/homepage").then((r) => r.json()).then(setSettings).catch(() => {});
   }, []);
 
-  useEffect(() => {
-    const handle = () => setScrolled(window.scrollY > 60);
-    window.addEventListener("scroll", handle, { passive: true });
-    return () => window.removeEventListener("scroll", handle);
-  }, []);
+  /* The theme lives on <html>, not in React. Subscribing to the same
+     "themechange" event the dashboard header dispatches keeps this icon in
+     sync wherever the preference is flipped. */
+  const dark = useSyncExternalStore(
+    (onChange) => {
+      window.addEventListener("themechange", onChange);
+      return () => window.removeEventListener("themechange", onChange);
+    },
+    () => document.documentElement.getAttribute("data-theme") === "dark",
+    () => false,
+  );
 
-  const scrollToSection = useCallback((id: string) => {
+  const toggleTheme = () => {
+    const next = !dark;
+    if (next) document.documentElement.setAttribute("data-theme", "dark");
+    else document.documentElement.removeAttribute("data-theme");
+    localStorage.setItem("theme", next ? "dark" : "light");
+    window.dispatchEvent(new Event("themechange"));
+  };
+
+  const goTo = useCallback((id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     setNavOpen(false);
   }, []);
 
   if (!settings) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#1F1F1F" }}>
-        <div style={{ width: 36, height: 36, border: "3px solid rgba(255,255,255,0.15)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#143A2E" }}>
+        <div style={{ width: 34, height: 34, border: "3px solid rgba(255,255,255,0.18)", borderTopColor: "#fff", borderRadius: "50%", animation: "hp-spin 0.7s linear infinite" }} />
+        <style>{`@keyframes hp-spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     );
   }
 
-  const features = [
-    { icon: <Shield style={{ width: 22, height: 22, color: ACCENT }} />, title: t("featureSecureTitle"), desc: t("featureSecureDesc") },
-    { icon: <Star style={{ width: 22, height: 22, color: ACCENT }} />, title: t("featureAiTitle"), desc: t("featureAiDesc") },
-    { icon: <RefreshCw style={{ width: 22, height: 22, color: ACCENT }} />, title: t("featureRefundTitle"), desc: t("featureRefundDesc") },
-    { icon: <FileCheck style={{ width: 22, height: 22, color: ACCENT }} />, title: t("featureContractTitle"), desc: t("featureContractDesc") },
-    { icon: <Globe style={{ width: 22, height: 22, color: ACCENT }} />, title: t("featureLangTitle"), desc: t("featureLangDesc") },
-  ];
-
   const navLinks: [string, string][] = [
     [tNav("about"), "about"],
-    [tNav("services"), "features"],
-    [tNav("modules"), "programmes"],
+    [tNav("services"), "services"],
+    [tNav("modules"), "how-it-works"],
     [tNav("providers"), "providers"],
     [tNav("workers"), "workers"],
     [tNav("contact"), "contact"],
   ];
 
+  const heroImages = settings.hero.images ?? [];
+  const steps = settings.programmes.items.filter((i) => i.title.trim());
+  const rows = settings.differentiators.items.filter((i) => i.title.trim());
+  const quotes = settings.testimonials.items.filter((i) => i.quote.trim());
+  const packages = settings.packages.items.filter((i) => i.name.trim());
+  const faqs = settings.faq.items.filter((i) => i.question.trim());
+  const partners = settings.partners.items.filter((i) => i.name.trim() || i.logoUrl);
+  const socials = (settings.footer.socials ?? []).filter((s) => s.href.trim());
+
   return (
-    <>
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700;800&family=Open+Sans:wght@400;500;600&display=swap" />
-      <style>{`
-        html { scroll-behavior: smooth; }
-        body { font-family: 'Ubuntu', 'Open Sans', sans-serif; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .nav-link { color: rgba(255,255,255,0.75); font-size:0.875rem; font-weight:500; text-decoration:none; transition:color 0.15s; cursor:pointer; background:none; border:none; }
-        .nav-link:hover { color:#fff; }
-        .people-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:1.25rem; }
-        @media(min-width:768px) { .people-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); } }
-        .feature-grid { display:grid; grid-template-columns:1fr; gap:1.25rem; }
-        @media(min-width:640px) { .feature-grid { grid-template-columns:1fr 1fr; } }
-        @media(min-width:1024px) { .feature-grid { grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); } }
-        .stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:2rem; }
-        @media(min-width:768px) { .stats-grid { grid-template-columns:repeat(4,1fr); } }
-        .map-layout { display:flex; flex-direction:column; gap:2.5rem; }
-        @media(min-width:900px) { .map-layout { flex-direction:row; align-items:flex-start; } }
-        .footer-grid { display:grid; grid-template-columns:1fr; gap:2.5rem; }
-        @media(min-width:768px) { .footer-grid { grid-template-columns: 2fr 1fr 1fr; } }
-        .why-us-layout { flex-direction:column; }
-        @media(min-width:900px) { .why-us-layout { flex-direction:row; align-items:flex-start; } }
-        .why-us-video { width:100%; max-width:300px; }
-        .programme-grid { display:grid; grid-template-columns:1fr; gap:1.5rem; }
-        @media(min-width:640px) { .programme-grid { grid-template-columns:1fr 1fr; } }
-        @media(min-width:1024px) { .programme-grid { grid-template-columns:repeat(4,1fr); } }
-        .testimonial-grid { display:grid; grid-template-columns:1fr; gap:1.5rem; }
-        @media(min-width:768px) { .testimonial-grid { grid-template-columns:repeat(3,1fr); } }
-        .hero-layout { flex-direction:column; align-items:stretch; }
-        @media(min-width:960px) { .hero-layout { flex-direction:row; align-items:center; } }
-        .hero-video-col { max-width:380px; margin:0 auto; }
-        @media(min-width:960px) { .hero-video-col { margin:0; } }
-      `}</style>
+    <div className="hp">
+      <style>{HOME_CSS}</style>
 
-      {/* ── Navbar ── */}
-      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, backgroundColor: scrolled ? "rgba(31,31,31,0.92)" : "transparent", backdropFilter: scrolled ? "blur(12px)" : "none", borderBottom: scrolled ? "1px solid rgba(255,255,255,0.08)" : "none", transition: "all 0.3s", padding: "0 1.5rem", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
-          <div style={{ width: 34, height: 34, borderRadius: 9, backgroundColor: "#fff", flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.25)" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/ced.png" alt="RG Partners" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-          </div>
-          <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.125rem", letterSpacing: "-0.02em" }}>SSFRS</span>
-        </div>
+      {/* ── Nav ── */}
+      <nav className="hp-nav">
+        <Link href="/" className="hp-mark">SSFRS</Link>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "2rem" }} className="hidden md:flex">
+        <div className="hp-nav-links">
           {navLinks.map(([label, id]) => (
-            <button key={id} className="nav-link" onClick={() => scrollToSection(id)}>{label}</button>
+            <button key={id} className="hp-nav-link" onClick={() => goTo(id)}>{label}</button>
           ))}
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }} className="hidden md:flex">
+        <div className="hp-nav-right">
           <LanguageSwitcher variant="dark" />
-          <Link href="/login" style={{ padding: "0.45rem 1.125rem", borderRadius: 8, fontSize: "0.875rem", fontWeight: 600, color: "rgba(255,255,255,0.85)", textDecoration: "none", border: "1px solid rgba(255,255,255,0.2)", transition: "background 0.15s" }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.1)")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
-            {tNav("signIn")}
-          </Link>
-          <Link href="/register" style={{ padding: "0.45rem 1.125rem", borderRadius: 8, fontSize: "0.875rem", fontWeight: 700, color: "#fff", textDecoration: "none", background: "linear-gradient(135deg, #00A5E2, #2F5C8A)", boxShadow: "0 2px 8px rgba(91,79,229,0.4)", transition: "opacity 0.15s" }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
-            onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}>
-            {tNav("getStarted")}
-          </Link>
+          <button className="hp-icon-btn" onClick={toggleTheme} aria-label="Toggle theme">
+            {dark ? <Sun size={17} /> : <Moon size={17} />}
+          </button>
+          <Link href="/login" className="hp-signin">{tNav("signIn")}</Link>
         </div>
 
-        <button className="md:hidden" onClick={() => setNavOpen(!navOpen)} style={{ background: "none", border: "none", cursor: "pointer", color: "#fff", display: "flex" }}>
-          {navOpen ? <X style={{ width: 22, height: 22 }} /> : <Menu style={{ width: 22, height: 22 }} />}
+        <button className="hp-burger" onClick={() => setNavOpen(!navOpen)} aria-label="Menu">
+          {navOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
       </nav>
 
       {navOpen && (
-        <div style={{ position: "fixed", top: 64, left: 0, right: 0, zIndex: 99, background: "rgba(31,31,31,0.97)", backdropFilter: "blur(12px)", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+        <div className="hp-drawer">
           {navLinks.map(([label, id]) => (
-            <button key={id} className="nav-link" onClick={() => scrollToSection(id)} style={{ textAlign: "left", fontSize: "1rem" }}>{label}</button>
+            <button key={id} className="hp-nav-link" style={{ textAlign: "left" }} onClick={() => goTo(id)}>{label}</button>
           ))}
-          <div style={{ display: "flex", gap: "0.75rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
-            <Link href="/login" style={{ flex: 1, textAlign: "center", padding: "0.6rem", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", color: "#fff", textDecoration: "none", fontWeight: 600, fontSize: "0.875rem" }}>{tNav("signIn")}</Link>
-            <Link href="/register" style={{ flex: 1, textAlign: "center", padding: "0.6rem", borderRadius: 8, background: ACCENT, color: "#fff", textDecoration: "none", fontWeight: 700, fontSize: "0.875rem" }}>{tNav("getStarted")}</Link>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", paddingTop: "0.5rem" }}>
+            <LanguageSwitcher variant="dark" />
+            <Link href="/login" className="hp-signin">{tNav("signIn")}</Link>
           </div>
-          <LanguageSwitcher variant="dark" />
         </div>
       )}
 
       {/* ── Hero ── */}
-      <section style={{ position: "relative", minHeight: "92vh", overflow: "hidden", background: "linear-gradient(160deg, #1F1F1F 0%, #132C33 100%)", display: "flex", alignItems: "center", padding: "7.5rem 1.5rem 5rem" }}>
-        <div style={{ position: "absolute", inset: 0, opacity: 0.5, backgroundImage: "radial-gradient(circle at 15% 20%, rgba(0,165,226,0.16) 0%, transparent 45%), radial-gradient(circle at 85% 80%, rgba(47,92,138,0.25) 0%, transparent 50%)" }} />
-
-        <motion.div style={{ position: "relative", zIndex: 2, opacity: heroOpacity, maxWidth: 1160, margin: "0 auto", width: "100%", display: "flex", gap: "3.5rem" }} className="hero-layout">
-          <div style={{ flex: "1 1 520px", minWidth: 0 }}>
-            <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}
-              style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "0.375rem 1rem", borderRadius: 999, marginBottom: "1.5rem", backgroundColor: "rgba(0,165,226,0.14)", border: "1px solid rgba(0,165,226,0.35)" }}>
-              <Shield style={{ width: 13, height: 13, color: "#5BC2E0" }} />
-              <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#7DD3E8" }}>{t("platformBadge")}</span>
-            </motion.div>
-
-            <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }}
-              style={{ color: "#fff", fontWeight: 800, lineHeight: 1.12, letterSpacing: "-0.03em", marginBottom: "1.5rem", fontSize: "clamp(2rem, 4.6vw, 3.5rem)", maxWidth: 620 }}>
-              {settings.hero.title}
-            </motion.h1>
-
-            <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.35 }}
-              style={{ color: "rgba(255,255,255,0.65)", lineHeight: 1.75, fontSize: "clamp(1rem, 1.4vw, 1.125rem)", maxWidth: 540, marginBottom: "2.5rem" }}>
-              {settings.hero.subtitle}
-            </motion.p>
-
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.5 }}
-              style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-              <Link href={settings.hero.cta1Href} style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.8rem 2rem", borderRadius: 10, fontWeight: 700, fontSize: "0.9375rem", textDecoration: "none", color: "#fff", background: "linear-gradient(135deg, #00A5E2, #2F5C8A)", boxShadow: "0 4px 20px rgba(0,165,226,0.35)", transition: "transform 0.15s, box-shadow 0.15s" }}>
-                {settings.hero.cta1Text}<ArrowRight style={{ width: 16, height: 16 }} />
-              </Link>
-              <Link href={settings.hero.cta2Href} style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.8rem 2rem", borderRadius: 10, fontWeight: 600, fontSize: "0.9375rem", textDecoration: "none", color: "#fff", border: "1.5px solid rgba(255,255,255,0.3)", backgroundColor: "rgba(255,255,255,0.08)", transition: "background 0.15s, border-color 0.15s" }}>
-                {settings.hero.cta2Text}
-              </Link>
-            </motion.div>
+      <section className="hp-hero">
+        <div className="hp-wrap hp-hero-grid">
+          <div className="hp-reveal">
+            <p className="hp-eyebrow">{settings.hero.eyebrow}</p>
+            <h1 className="hp-h1">{settings.hero.title}</h1>
+            <p className="hp-lead" style={{ maxWidth: 540 }}>{settings.hero.subtitle}</p>
+            <div className="hp-hero-actions">
+              <Link href={settings.hero.cta1Href} className="hp-btn hp-btn-primary">{settings.hero.cta1Text}</Link>
+              <Link href={settings.hero.cta2Href} className="hp-btn hp-btn-ghost">{settings.hero.cta2Text}</Link>
+            </div>
           </div>
 
-          {settings.hero.videoUrl && (
-            <motion.div initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: 0.3 }}
-              style={{ flex: "1 1 380px", minWidth: 0 }} className="hero-video-col">
-              <CompactVideoCard videoUrl={settings.hero.videoUrl} label={t("watchVideo")} />
-            </motion.div>
-          )}
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}
-          style={{ position: "absolute", bottom: 28, left: "50%", transform: "translateX(-50%)", zIndex: 2, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, cursor: "pointer" }}
-          onClick={() => scrollToSection("stats")}>
-          <motion.div animate={{ y: [0, 6, 0] }} transition={{ repeat: Infinity, duration: 1.5 }}>
-            <ChevronDown style={{ width: 18, height: 18, color: "rgba(255,255,255,0.4)" }} />
-          </motion.div>
-        </motion.div>
+          <div className="hp-collage hp-reveal" style={{ animationDelay: "0.12s" }}>
+            {heroImages.slice(0, 3).map((img, i) => (
+              <figure key={i}>
+                <Media src={img.url} alt={img.label} />
+                {img.label && <figcaption className="hp-tag">{img.label}</figcaption>}
+              </figure>
+            ))}
+          </div>
+        </div>
       </section>
 
-      {/* ── Value Proposition ── */}
-      {settings.valueProp.visible && (
-        <section style={{ background: "#fff", padding: "5.5rem 1.5rem" }}>
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            style={{ maxWidth: 780, margin: "0 auto", textAlign: "center" }}>
-            <Quote style={{ width: 30, height: 30, color: ACCENT, opacity: 0.5, margin: "0 auto 1.25rem" }} />
-            <h2 style={{ color: "#1F1F1F", fontSize: "clamp(1.5rem, 3vw, 2.125rem)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.3, marginBottom: "1.25rem" }}>
-              {settings.valueProp.title}
-            </h2>
-            <p style={{ color: "#64748B", fontSize: "1.0625rem", lineHeight: 1.85 }}>{settings.valueProp.body}</p>
-          </motion.div>
+      {/* ── How it works ── */}
+      {settings.programmes.visible && steps.length > 0 && (
+        <section id="how-it-works">
+          <div className="hp-wrap">
+            <SectionHead
+              eyebrow={settings.programmes.eyebrow}
+              title={settings.programmes.title}
+              lead={settings.programmes.subtitle}
+            />
+            <div className="hp-grid-3">
+              {steps.map((item, i) => (
+                <Reveal key={i} delay={i * 0.08}>
+                  <Link href={item.href || "/register"} className="hp-step" style={{ height: "100%" }}>
+                    <div className="hp-step-media">
+                      <Media src={item.imageUrl} alt={item.title} />
+                      <span className="hp-step-no">{String(i + 1).padStart(2, "0")}</span>
+                    </div>
+                    <div className="hp-step-body">
+                      <h4>{item.title}</h4>
+                      <p className="hp-body">{item.description}</p>
+                    </div>
+                  </Link>
+                </Reveal>
+              ))}
+            </div>
+            {settings.programmes.ctaText && (
+              <Reveal>
+                <div className="hp-center" style={{ marginTop: "4rem" }}>
+                  <Link href={settings.programmes.ctaHref || "/register"} className="hp-btn hp-btn-primary">
+                    {settings.programmes.ctaText}
+                  </Link>
+                </div>
+              </Reveal>
+            )}
+          </div>
         </section>
       )}
 
       {/* ── Stats ── */}
       {settings.stats.visible && (
-        <section id="stats" style={{ background: "linear-gradient(135deg, #1F1F1F 0%, #132C33 100%)", padding: "5rem 1.5rem" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <div className="stats-grid">
-              {settings.stats.items.map((stat, i) => (
-                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "clamp(2.5rem, 5vw, 3.5rem)", fontWeight: 900, color: "#fff", lineHeight: 1, letterSpacing: "-0.03em", marginBottom: "0.5rem" }}>
-                    <Counter target={stat.value} />
-                  </div>
-                  <div style={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.5)", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.08em" }}>{stat.label}</div>
-                  <div style={{ width: 32, height: 2, background: ACCENT, margin: "0.875rem auto 0", borderRadius: 999 }} />
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ── About / Features ── */}
-      {settings.about.visible && (
-        <section id="features" style={{ background: "#F2F1E7", padding: "6rem 1.5rem" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ textAlign: "center", marginBottom: "3.5rem" }}>
-              <div style={{ display: "inline-block", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: ACCENT, padding: "0.25rem 0.875rem", borderRadius: 999, backgroundColor: "#E3F4FB", border: "1px solid #B8E3F2", marginBottom: "1rem" }}>
-                {t("platformSection")}
-              </div>
-              <h2 style={{ color: "#1F1F1F", fontSize: "clamp(1.75rem, 3.5vw, 2.5rem)", fontWeight: 800, letterSpacing: "-0.03em", marginBottom: "1rem" }} id="about">
-                {settings.about.title}
-              </h2>
-              <p style={{ color: "#64748B", fontSize: "1.0625rem", lineHeight: 1.75, maxWidth: 600, margin: "0 auto" }}>{settings.about.description}</p>
-            </motion.div>
-            <div className="feature-grid">
-              {features.map((f, i) => <FeatureCard key={i} {...f} delay={i * 0.08} />)}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ── Why Choose Us ── */}
-      {settings.differentiators.visible && (
-        <section id="differentiators" style={{ background: "#fff", padding: "6rem 1.5rem" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ marginBottom: "3rem" }}>
-              <div style={{ display: "inline-block", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: ACCENT, padding: "0.25rem 0.875rem", borderRadius: 999, backgroundColor: "#E3F4FB", border: "1px solid #B8E3F2", marginBottom: "1rem" }}>
-                {t("differentiatorsBadge")}
-              </div>
-              <h2 style={{ color: "#1F1F1F", fontSize: "clamp(1.75rem, 3.5vw, 2.25rem)", fontWeight: 800, letterSpacing: "-0.03em", marginBottom: "0.5rem" }}>{settings.differentiators.title}</h2>
-              <p style={{ color: "#64748B", fontSize: "1rem", lineHeight: 1.75, maxWidth: 560 }}>{settings.differentiators.subtitle}</p>
-            </motion.div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "3rem", alignItems: "center" }} className="why-us-layout">
-              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "1.75rem", minWidth: 0 }}>
-                {settings.differentiators.items.filter((it) => it.title.trim()).map((item, i) => (
-                  <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}
-                    style={{ display: "flex", gap: "1.125rem", alignItems: "flex-start" }}>
-                    <span style={{ flexShrink: 0, width: 36, height: 36, borderRadius: 10, backgroundColor: "#E3F4FB", color: ACCENT, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "0.9375rem" }}>
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    <div>
-                      <h4 style={{ fontWeight: 700, color: "#1F1F1F", marginBottom: "0.375rem" }}>{item.title}</h4>
-                      <p style={{ fontSize: "0.875rem", color: "#64748B", lineHeight: 1.7 }}>{item.description}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-
-              {settings.hero.videoUrl && (
-                <div style={{ flex: "0 0 300px" }} className="why-us-video">
-                  <CompactVideoCard videoUrl={settings.hero.videoUrl} label={t("watchVideo")} />
+        <section style={{ paddingTop: 0 }}>
+          <div className="hp-wrap hp-stats">
+            {settings.stats.items.map((stat, i) => (
+              <Reveal key={i} delay={i * 0.07}>
+                <div className="hp-center">
+                  <div className="hp-stat-value"><Counter target={stat.value} /></div>
+                  <div className="hp-stat-label">{stat.label}</div>
+                  <div className="hp-stat-rule" style={{ margin: "1rem auto 0" }} />
                 </div>
-              )}
-            </div>
+              </Reveal>
+            ))}
           </div>
         </section>
       )}
 
-      {/* ── Modules / Programmes ── */}
-      {settings.programmes.visible && (
-        <section id="programmes" style={{ background: "#F2F1E7", padding: "6rem 1.5rem" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ marginBottom: "3rem" }}>
-              <div style={{ display: "inline-block", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: ACCENT, padding: "0.25rem 0.875rem", borderRadius: 999, backgroundColor: "#E3F4FB", border: "1px solid #B8E3F2", marginBottom: "1rem" }}>
-                {t("programmesBadge")}
-              </div>
-              <h2 style={{ color: "#1F1F1F", fontSize: "clamp(1.75rem, 3.5vw, 2.25rem)", fontWeight: 800, letterSpacing: "-0.03em", marginBottom: "0.5rem" }}>{settings.programmes.title}</h2>
-              <p style={{ color: "#64748B", fontSize: "1rem", lineHeight: 1.75 }}>{settings.programmes.subtitle}</p>
-            </motion.div>
+      {/* ── Alternating feature rows ── */}
+      {settings.differentiators.visible && rows.length > 0 && (
+        <section id="services">
+          <div className="hp-wrap">
+            <SectionHead
+              eyebrow={settings.differentiators.eyebrow}
+              title={settings.differentiators.title}
+              lead={settings.differentiators.subtitle}
+            />
+            {rows.map((item, i) => (
+              <Reveal key={i}>
+                <div className={`hp-row ${i % 2 === 1 ? "flip" : ""}`}>
+                  <div className="hp-row-media">
+                    <Media src={item.imageUrl} alt={item.title} />
+                  </div>
+                  <div>
+                    {item.eyebrow && <p className="hp-eyebrow">{item.eyebrow}</p>}
+                    <h3 className="hp-h3">{item.title}</h3>
+                    <p className="hp-lead" style={{ marginBottom: "2rem" }}>{item.description}</p>
+                    {item.linkText && (
+                      <Link href={item.href || "/register"} className="hp-inline-link">
+                        {item.linkText} <ArrowRight size={17} />
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+      )}
 
-            <div className="programme-grid">
-              {settings.programmes.items.filter((it) => it.title.trim()).map((item, i) => (
-                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.07 }}>
-                  <Link href={item.href || "/register"} style={{ display: "block", textDecoration: "none", background: "#fff", borderRadius: 16, overflow: "hidden", border: "1px solid #E2E8F0", boxShadow: "0 1px 4px rgba(0,0,0,0.05)", transition: "box-shadow 0.2s, transform 0.2s", height: "100%" }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "0 10px 30px rgba(31,31,31,0.10)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-3px)"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 4px rgba(0,0,0,0.05)"; (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; }}>
-                    <div style={{ aspectRatio: "16/10", background: item.imageUrl ? undefined : "linear-gradient(135deg, #E3F4FB, #D6ECF5)", display: item.imageUrl ? "block" : "flex", alignItems: "center", justifyContent: "center" }}>
-                      {item.imageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={item.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                      ) : (
-                        <LayoutGrid style={{ width: 28, height: 28, color: ACCENT, opacity: 0.4 }} />
-                      )}
-                    </div>
-                    <div style={{ padding: "1.25rem" }}>
-                      <h4 style={{ fontWeight: 700, color: "#1F1F1F", marginBottom: "0.5rem" }}>{item.title}</h4>
-                      <p style={{ fontSize: "0.8125rem", color: "#64748B", lineHeight: 1.65, marginBottom: "0.875rem" }}>{item.description}</p>
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: "0.8125rem", fontWeight: 700, color: ACCENT }}>
-                        {t("learnMore")} <ArrowUpRight style={{ width: 13, height: 13 }} />
-                      </span>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
+      {/* ── Value proposition ── */}
+      {settings.valueProp.visible && (
+        <section id="about">
+          <div className="hp-wrap hp-center" style={{ maxWidth: 820 }}>
+            <Reveal>
+              <p className="hp-eyebrow">{settings.about.eyebrow}</p>
+              <h2 className="hp-h2">{settings.valueProp.title}</h2>
+              <p className="hp-lead">{settings.valueProp.body}</p>
+            </Reveal>
           </div>
         </section>
       )}
 
       {/* ── Providers ── */}
       {settings.providers.visible && (
-        <section id="providers" style={{ background: "#fff", padding: "6rem 1.5rem" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ marginBottom: "3rem" }}>
-              <div style={{ display: "inline-block", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: ACCENT, padding: "0.25rem 0.875rem", borderRadius: 999, backgroundColor: "#E3F4FB", border: "1px solid #B8E3F2", marginBottom: "1rem" }}>
-                {t("providersBadge")}
-              </div>
-              <h2 style={{ color: "#1F1F1F", fontSize: "clamp(1.75rem, 3.5vw, 2.25rem)", fontWeight: 800, letterSpacing: "-0.03em", marginBottom: "0.5rem" }}>{settings.providers.title}</h2>
-              <p style={{ color: "#64748B", fontSize: "1rem", lineHeight: 1.75 }}>{settings.providers.subtitle}</p>
-            </motion.div>
+        <section id="providers">
+          <div className="hp-wrap">
+            <SectionHead title={settings.providers.title} lead={settings.providers.subtitle} />
             {settings.providers.featured.length > 0 ? (
-              <div className="people-grid">
-                {settings.providers.featured.map((u, i) => <PersonCard key={u.id} user={u} index={i} providerLabel={t("personProvider")} workerLabel={t("personWorker")} />)}
+              <div className="hp-people">
+                {settings.providers.featured.map((u) => (
+                  <PersonCard key={u.id} user={u} providerLabel={t("personProvider")} workerLabel={t("personWorker")} />
+                ))}
               </div>
             ) : (
-              <p style={{ color: "#94A3B8", fontSize: "0.9375rem" }}>{t("noProviders")}</p>
+              <p className="hp-body hp-center">{t("noProviders")}</p>
             )}
           </div>
         </section>
@@ -451,47 +671,84 @@ export default function HomePage() {
 
       {/* ── Workers ── */}
       {settings.workers.visible && (
-        <section id="workers" style={{ background: "#F2F1E7", padding: "6rem 1.5rem" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ marginBottom: "3rem" }}>
-              <div style={{ display: "inline-block", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#0D9488", padding: "0.25rem 0.875rem", borderRadius: 999, backgroundColor: "#CCFBF1", border: "1px solid #99F6E4", marginBottom: "1rem" }}>
-                {t("workersBadge")}
-              </div>
-              <h2 style={{ color: "#1F1F1F", fontSize: "clamp(1.75rem, 3.5vw, 2.25rem)", fontWeight: 800, letterSpacing: "-0.03em", marginBottom: "0.5rem" }}>{settings.workers.title}</h2>
-              <p style={{ color: "#64748B", fontSize: "1rem", lineHeight: 1.75 }}>{settings.workers.subtitle}</p>
-            </motion.div>
+        <section id="workers" style={{ paddingTop: 0 }}>
+          <div className="hp-wrap">
+            <SectionHead title={settings.workers.title} lead={settings.workers.subtitle} />
             {settings.workers.featured.length > 0 ? (
-              <div className="people-grid">
-                {settings.workers.featured.map((u, i) => <PersonCard key={u.id} user={u} index={i} providerLabel={t("personProvider")} workerLabel={t("personWorker")} />)}
+              <div className="hp-people">
+                {settings.workers.featured.map((u) => (
+                  <PersonCard key={u.id} user={u} providerLabel={t("personProvider")} workerLabel={t("personWorker")} />
+                ))}
               </div>
             ) : (
-              <p style={{ color: "#94A3B8", fontSize: "0.9375rem" }}>{t("noWorkers")}</p>
+              <p className="hp-body hp-center">{t("noWorkers")}</p>
             )}
           </div>
         </section>
       )}
 
       {/* ── Testimonials ── */}
-      {settings.testimonials.visible && settings.testimonials.items.some((it) => it.quote.trim()) && (
-        <section style={{ background: "#fff", padding: "6rem 1.5rem" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ textAlign: "center", marginBottom: "3rem" }}>
-              <div style={{ display: "inline-block", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: ACCENT, padding: "0.25rem 0.875rem", borderRadius: 999, backgroundColor: "#E3F4FB", border: "1px solid #B8E3F2", marginBottom: "1rem" }}>
-                {t("testimonialsBadge")}
-              </div>
-              <h2 style={{ color: "#1F1F1F", fontSize: "clamp(1.75rem, 3.5vw, 2.25rem)", fontWeight: 800, letterSpacing: "-0.03em" }}>{settings.testimonials.title}</h2>
-            </motion.div>
-            <div className="testimonial-grid">
-              {settings.testimonials.items.filter((it) => it.quote.trim()).map((item, i) => (
-                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}
-                  style={{ background: "#F2F1E7", borderRadius: 16, padding: "1.75rem", border: "1px solid #E2E8F0", display: "flex", flexDirection: "column", gap: "1rem" }}>
-                  <Quote style={{ width: 22, height: 22, color: ACCENT, opacity: 0.45 }} />
-                  <p style={{ color: "#334155", fontSize: "0.9375rem", lineHeight: 1.75, flex: 1 }}>&ldquo;{item.quote}&rdquo;</p>
-                  <div style={{ borderTop: "1px solid #E2E8F0", paddingTop: "0.875rem" }}>
-                    <p style={{ fontWeight: 700, fontSize: "0.875rem", color: "#1F1F1F" }}>{item.name}</p>
-                    {item.role && <p style={{ fontSize: "0.8125rem", color: "#94A3B8" }}>{item.role}</p>}
+      {settings.testimonials.visible && quotes.length > 0 && (
+        <section id="testimonials">
+          <div className="hp-wrap">
+            <SectionHead eyebrow={settings.testimonials.eyebrow} title={settings.testimonials.title} />
+            <div className="hp-grid-4">
+              {quotes.map((item, i) => (
+                <Reveal key={i} delay={i * 0.07}>
+                  <div className="hp-card" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+                    <div className="hp-stars">
+                      {Array.from({ length: 5 }).map((_, s) => (
+                        <Star key={s} size={15} fill="currentColor" strokeWidth={0} />
+                      ))}
+                    </div>
+                    <p className="hp-quote" style={{ flex: 1 }}>{item.quote}</p>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
+                      <div className="hp-avatar">
+                        {item.avatarUrl
+                          // eslint-disable-next-line @next/next/no-img-element
+                          ? <img src={item.avatarUrl} alt="" />
+                          : (item.name?.charAt(0).toUpperCase() || "?")}
+                      </div>
+                      <div>
+                        <p style={{ fontWeight: 700, fontSize: "0.9375rem" }}>{item.name}</p>
+                        {item.role && <p className="hp-body" style={{ fontSize: "0.875rem" }}>{item.role}</p>}
+                      </div>
+                    </div>
                   </div>
-                </motion.div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── Packages ── */}
+      {settings.packages.visible && packages.length > 0 && (
+        <section id="packages">
+          <div className="hp-wrap">
+            <SectionHead
+              eyebrow={settings.packages.eyebrow}
+              title={settings.packages.title}
+              lead={settings.packages.subtitle}
+            />
+            <div className="hp-grid-3">
+              {packages.map((pkg, i) => (
+                <Reveal key={i} delay={i * 0.08}>
+                  <div className={`hp-card hp-pkg ${pkg.popular ? "hp-pkg-popular" : ""}`} style={{ height: "100%" }}>
+                    {pkg.popular && <span className="hp-pkg-badge">{t("mostPopular")}</span>}
+                    <h4>{pkg.name}</h4>
+                    <p className="hp-body">{pkg.tagline}</p>
+                    <p className="hp-pkg-price">{pkg.priceLabel}</p>
+                    <ul>
+                      {pkg.features.filter((f) => f.trim()).map((f, fi) => (
+                        <li key={fi}><Check size={17} />{f}</li>
+                      ))}
+                    </ul>
+                    <Link href={pkg.ctaHref || "/register"} className="hp-btn hp-btn-primary" style={{ width: "100%" }}>
+                      {pkg.ctaText}
+                    </Link>
+                  </div>
+                </Reveal>
               ))}
             </div>
           </div>
@@ -499,128 +756,125 @@ export default function HomePage() {
       )}
 
       {/* ── Partners ── */}
-      {settings.partners.visible && settings.partners.items.some((it) => it.name.trim()) && (
-        <section style={{ background: "#F2F1E7", padding: "4.5rem 1.5rem" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto", textAlign: "center" }}>
-            <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.14em", color: "#94A3B8", marginBottom: "2rem" }}>
-              {settings.partners.title}
-            </p>
-            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", alignItems: "center", gap: "2.5rem 3rem" }}>
-              {settings.partners.items.filter((it) => it.name.trim()).map((item, i) => (
-                <motion.div key={i} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
-                  style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 40, filter: "grayscale(100%)", opacity: 0.6 }}>
-                  {item.logoUrl ? (
+      {settings.partners.visible && partners.length > 0 && (
+        <section style={{ paddingTop: 0 }}>
+          <div className="hp-wrap hp-center">
+            <p className="hp-eyebrow">{settings.partners.title}</p>
+            <div className="hp-partners">
+              {partners.map((item, i) => (
+                <div key={i}>
+                  {item.logoUrl
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.logoUrl} alt={item.name} style={{ height: "100%", width: "auto", objectFit: "contain" }} />
-                  ) : (
-                    <span style={{ fontWeight: 800, fontSize: "1.0625rem", color: "#475569", letterSpacing: "-0.02em" }}>{item.name}</span>
-                  )}
-                </motion.div>
+                    ? <img src={item.logoUrl} alt={item.name} />
+                    : <span style={{ fontWeight: 800, fontSize: "1.0625rem" }}>{item.name}</span>}
+                </div>
               ))}
             </div>
           </div>
         </section>
       )}
 
-      {/* ── Map ── */}
-      {settings.map.visible && (
-        <section id="contact" style={{ background: "#fff", padding: "6rem 1.5rem" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <div className="map-layout">
-              <motion.div initial={{ opacity: 0, x: -24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }} style={{ flex: "0 0 340px" }}>
-                <div style={{ display: "inline-block", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: ACCENT, padding: "0.25rem 0.875rem", borderRadius: 999, backgroundColor: "#E3F4FB", border: "1px solid #B8E3F2", marginBottom: "1rem" }}>
-                  {t("locationBadge")}
-                </div>
-                <h2 style={{ color: "#1F1F1F", fontSize: "clamp(1.75rem, 3.5vw, 2.25rem)", fontWeight: 800, letterSpacing: "-0.03em", marginBottom: "1rem" }}>{settings.map.title}</h2>
-                <p style={{ color: "#64748B", fontSize: "1rem", lineHeight: 1.75, marginBottom: "2rem" }}>{settings.map.description}</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: "1.125rem" }}>
-                  {[
-                    { icon: <MapPin style={{ width: 16, height: 16, color: ACCENT }} />, text: settings.map.address },
-                    { icon: <Mail style={{ width: 16, height: 16, color: ACCENT }} />, text: settings.footer.email },
-                    { icon: <Phone style={{ width: 16, height: 16, color: ACCENT }} />, text: settings.footer.phone },
-                  ].map((item, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "0.875rem" }}>
-                      <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: "#E3F4FB", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{item.icon}</div>
-                      <span style={{ fontSize: "0.9375rem", color: "#334155", fontWeight: 500, lineHeight: 1.5, paddingTop: 6 }}>{item.text}</span>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-              <motion.div initial={{ opacity: 0, x: 24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.1 }}
-                style={{ flex: 1, minHeight: 420, borderRadius: 18, overflow: "hidden", border: "1px solid #E2E8F0", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}>
-                <iframe src={settings.map.embedUrl} style={{ width: "100%", height: "100%", minHeight: 420, border: "none", display: "block" }} title="Location map" loading="lazy" />
-              </motion.div>
+      {/* ── FAQ ── */}
+      {settings.faq.visible && faqs.length > 0 && (
+        <section id="faq">
+          <div className="hp-wrap">
+            <SectionHead eyebrow={settings.faq.eyebrow} title={settings.faq.title} />
+            <div className="hp-faq">
+              {faqs.map((item, i) => <FaqRow key={i} question={item.question} answer={item.answer} />)}
             </div>
           </div>
         </section>
       )}
 
-      {/* ── Final CTA ── */}
+      {/* ── Map & contact ── */}
+      {settings.map.visible && (
+        <section id="contact">
+          <div className="hp-wrap hp-map">
+            <Reveal>
+              <div>
+                <p className="hp-eyebrow">{t("locationBadge")}</p>
+                <h2 className="hp-h2">{settings.map.title}</h2>
+                <p className="hp-lead" style={{ marginBottom: "2.25rem" }}>{settings.map.description}</p>
+                <div className="hp-contact-row"><MapPin size={18} /><span className="hp-body">{settings.map.address}</span></div>
+                <div className="hp-contact-row"><Mail size={18} /><span className="hp-body">{settings.footer.email}</span></div>
+                <div className="hp-contact-row"><Phone size={18} /><span className="hp-body">{settings.footer.phone}</span></div>
+              </div>
+            </Reveal>
+            <div className="hp-map-frame">
+              <iframe src={settings.map.embedUrl} title="Location map" loading="lazy"
+                style={{ width: "100%", height: "100%", minHeight: 420, border: "none", display: "block" }} />
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── Closing CTA ── */}
       {settings.finalCta.visible && (
-        <section style={{ background: "linear-gradient(135deg, #2F5C8A 0%, #00A5E2 55%, #3FB8E8 100%)", padding: "5rem 1.5rem" }}>
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            style={{ maxWidth: 720, margin: "0 auto", textAlign: "center" }}>
-            <h2 style={{ color: "#fff", fontSize: "clamp(1.75rem, 3.5vw, 2.5rem)", fontWeight: 800, letterSpacing: "-0.03em", marginBottom: "1rem" }}>
-              {settings.finalCta.title}
-            </h2>
-            <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "1.0625rem", lineHeight: 1.75, marginBottom: "2rem" }}>
-              {settings.finalCta.subtitle}
-            </p>
-            <Link href={settings.finalCta.ctaHref} style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.875rem 2.25rem", borderRadius: 10, fontWeight: 700, fontSize: "0.9375rem", textDecoration: "none", color: ACCENT, backgroundColor: "#fff", boxShadow: "0 8px 28px rgba(31,31,31,0.25)" }}>
-              {settings.finalCta.ctaText}<ArrowRight style={{ width: 16, height: 16 }} />
-            </Link>
-          </motion.div>
+        <section className="hp-center" style={{ paddingTop: 0 }}>
+          <div className="hp-wrap" style={{ maxWidth: 760 }}>
+            <Reveal>
+              <h2 className="hp-h2">{settings.finalCta.title}</h2>
+              <p className="hp-lead" style={{ marginBottom: "2.5rem" }}>{settings.finalCta.subtitle}</p>
+              <Link href={settings.finalCta.ctaHref} className="hp-btn hp-btn-primary">
+                {settings.finalCta.ctaText}
+              </Link>
+            </Reveal>
+          </div>
         </section>
       )}
 
       {/* ── Footer ── */}
-      <footer style={{ background: "linear-gradient(135deg, #1F1F1F 0%, #132C33 100%)", padding: "5rem 1.5rem 2.5rem", color: "#fff" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <div className="footer-grid" style={{ marginBottom: "3rem" }}>
+      <footer className="hp-footer">
+        <div className="hp-wrap">
+          <div className="hp-footer-grid">
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
-                <div style={{ width: 44, height: 44, borderRadius: 11, backgroundColor: "#fff", flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/ced.png" alt="RG Partners" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                </div>
-                <div>
-                  <span style={{ fontWeight: 900, fontSize: "1.125rem", letterSpacing: "-0.02em", display: "block" }}>RG Partners</span>
-                  <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", letterSpacing: "0.02em" }}>SSFRS Platform</span>
-                </div>
-              </div>
-              <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.875rem", lineHeight: 1.75, maxWidth: 320 }}>{settings.footer.description}</p>
+              <p className="hp-mark" style={{ display: "block", marginBottom: "1.25rem" }}>SSFRS</p>
+              <p className="hp-body" style={{ maxWidth: 320, marginBottom: "2rem" }}>{settings.footer.description}</p>
+              {socials.length > 0 && (
+                <>
+                  <h5>{t("followUs")}</h5>
+                  <div className="hp-socials">
+                    {socials.map((s, i) => (
+                      <a key={i} href={s.href} target="_blank" rel="noopener noreferrer" className="hp-social" aria-label={s.label}>
+                        {SOCIAL_ICONS[s.label.toLowerCase()] ?? <Globe size={18} />}
+                      </a>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
+
             <div>
-              <p style={{ fontWeight: 700, fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)", marginBottom: "1rem" }}>{t("footerPlatform")}</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
-                {([[t("footerLogin"), "/login"], [t("footerRegister"), "/register"], [t("providersBadge"), "/register"], [t("workersBadge"), "/register"]] as [string, string][]).map(([label, href]) => (
-                  <Link key={label} href={href} style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.875rem", textDecoration: "none", transition: "color 0.15s" }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.6)")}>{label}</Link>
-                ))}
+              <h5>{t("footerPlatform")}</h5>
+              <div className="hp-footer-links">
+                <button className="hp-nav-link" style={{ textAlign: "left", color: "#D5DED9" }} onClick={() => goTo("services")}>{tNav("services")}</button>
+                <button className="hp-nav-link" style={{ textAlign: "left", color: "#D5DED9" }} onClick={() => goTo("how-it-works")}>{tNav("modules")}</button>
+                <button className="hp-nav-link" style={{ textAlign: "left", color: "#D5DED9" }} onClick={() => goTo("about")}>{tNav("about")}</button>
+                <button className="hp-nav-link" style={{ textAlign: "left", color: "#D5DED9" }} onClick={() => goTo("testimonials")}>{t("testimonialsBadge")}</button>
               </div>
             </div>
+
             <div>
-              <p style={{ fontWeight: 700, fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)", marginBottom: "1rem" }}>{t("footerContact")}</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
-                <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.875rem" }}>{settings.footer.email}</span>
-                <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.875rem" }}>{settings.footer.phone}</span>
-                <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.875rem" }}>{settings.footer.address}</span>
+              <h5>{t("footerContact")}</h5>
+              <div className="hp-footer-links">
+                <span>{settings.footer.address}</span>
+                <a href={`mailto:${settings.footer.email}`}>{settings.footer.email}</a>
+                <a href={`tel:${settings.footer.phone}`}>{settings.footer.phone}</a>
+              </div>
+            </div>
+
+            <div>
+              <h5>{tNav("getStarted")}</h5>
+              <div className="hp-footer-links">
+                <Link href="/register">{t("footerRegister")}</Link>
+                <Link href="/login">{t("footerLogin")}</Link>
               </div>
             </div>
           </div>
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "1.75rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
-            <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.8125rem" }}>© {new Date().getFullYear()} RG Partners. All rights reserved.</p>
-            <div style={{ display: "flex", gap: "1.5rem" }}>
-              {([[t("footerPrivacy"), "#"], [t("footerTerms"), "#"]] as [string, string][]).map(([label, href]) => (
-                <Link key={label} href={href} style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.8125rem", textDecoration: "none" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}>{label}</Link>
-              ))}
-            </div>
-          </div>
+
+          <div className="hp-copy">© {new Date().getFullYear()} SSFRS</div>
         </div>
       </footer>
-    </>
+    </div>
   );
 }

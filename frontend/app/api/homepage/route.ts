@@ -14,6 +14,7 @@ export interface FeaturedUser {
 
 export interface HomepageSettings {
   hero: {
+    eyebrow: string;
     title: string;
     subtitle: string;
     videoUrl: string;
@@ -21,6 +22,8 @@ export interface HomepageSettings {
     cta1Href: string;
     cta2Text: string;
     cta2Href: string;
+    /** The tilted image collage beside the headline. Admin-uploaded. */
+    images: Array<{ url: string; label: string }>;
   };
   stats: {
     visible: boolean;
@@ -28,6 +31,7 @@ export interface HomepageSettings {
   };
   about: {
     visible: boolean;
+    eyebrow: string;
     title: string;
     description: string;
   };
@@ -55,6 +59,7 @@ export interface HomepageSettings {
     email: string;
     phone: string;
     address: string;
+    socials: Array<{ label: string; href: string }>;
   };
   valueProp: {
     visible: boolean;
@@ -63,20 +68,54 @@ export interface HomepageSettings {
   };
   differentiators: {
     visible: boolean;
+    eyebrow: string;
     title: string;
     subtitle: string;
-    items: Array<{ title: string; description: string }>;
+    /** Rendered as full-width alternating image / text rows. */
+    items: Array<{
+      eyebrow: string;
+      title: string;
+      description: string;
+      imageUrl: string;
+      linkText: string;
+      href: string;
+    }>;
   };
   programmes: {
     visible: boolean;
+    eyebrow: string;
     title: string;
     subtitle: string;
+    ctaText: string;
+    ctaHref: string;
     items: Array<{ title: string; description: string; imageUrl: string; href: string }>;
   };
   testimonials: {
     visible: boolean;
+    eyebrow: string;
     title: string;
-    items: Array<{ quote: string; name: string; role: string }>;
+    items: Array<{ quote: string; name: string; role: string; avatarUrl: string }>;
+  };
+  packages: {
+    visible: boolean;
+    eyebrow: string;
+    title: string;
+    subtitle: string;
+    items: Array<{
+      name: string;
+      tagline: string;
+      priceLabel: string;
+      features: string[];
+      popular: boolean;
+      ctaText: string;
+      ctaHref: string;
+    }>;
+  };
+  faq: {
+    visible: boolean;
+    eyebrow: string;
+    title: string;
+    items: Array<{ question: string; answer: string }>;
   };
   partners: {
     visible: boolean;
@@ -94,7 +133,8 @@ export interface HomepageSettings {
 
 export const DEFAULT_SETTINGS: HomepageSettings = {
   hero: {
-    title: "Service Failure Refund System",
+    eyebrow: "Service Failure Refund Platform",
+    title: "Every service failure, resolved on evidence.",
     subtitle:
       "A comprehensive platform for managing service claims, evaluating worker performance, and processing refunds with precision and transparency.",
     videoUrl: "",
@@ -102,6 +142,11 @@ export const DEFAULT_SETTINGS: HomepageSettings = {
     cta1Href: "/register",
     cta2Text: "Sign In",
     cta2Href: "/login",
+    images: [
+      { url: "", label: "Claims" },
+      { url: "", label: "Evidence" },
+      { url: "", label: "Refunds" },
+    ],
   },
   stats: {
     visible: true,
@@ -114,6 +159,7 @@ export const DEFAULT_SETTINGS: HomepageSettings = {
   },
   about: {
     visible: true,
+    eyebrow: "Every problem. One team.",
     title: "Why Choose SSFRS?",
     description:
       "Our platform bridges the gap between service providers and skilled workers, ensuring transparent claim resolution and fair refund processing.",
@@ -145,6 +191,12 @@ export const DEFAULT_SETTINGS: HomepageSettings = {
     email: "info@ssfrs.rw",
     phone: "+250 788 000 000",
     address: "KG 11 Ave, Kigali, Rwanda",
+    socials: [
+      { label: "LinkedIn", href: "" },
+      { label: "X", href: "" },
+      { label: "Instagram", href: "" },
+      { label: "Email", href: "" },
+    ],
   },
   valueProp: {
     visible: true,
@@ -154,19 +206,23 @@ export const DEFAULT_SETTINGS: HomepageSettings = {
   },
   differentiators: {
     visible: true,
-    title: "Why Choose SSFRS",
+    eyebrow: "Every problem. One team.",
+    title: "Whatever goes wrong, see it resolved fairly.",
     subtitle: "A refund process providers and workers can both trust.",
     items: [
-      { title: "AI-Verified Evidence", description: "Every claim is checked against GPS-tagged photos, EXIF timestamps, and message history before a human ever reviews it." },
-      { title: "Escrow-Backed Funding", description: "Provider funds are held in escrow the moment a project starts, so a valid refund is never blocked by a missing payment." },
-      { title: "Independent Evaluation", description: "Claims are decided by evaluators outside the provider–worker relationship, with AI-assisted mediation reports for context." },
-      { title: "Full Audit Trail", description: "Every contract signature, status change, and refund decision is logged and available to admins in real time." },
+      { eyebrow: "Evidence", title: "AI-Verified Evidence", description: "Every claim is checked against GPS-tagged photos, EXIF timestamps, and message history before a human ever reviews it.", imageUrl: "", linkText: "File a claim", href: "/register" },
+      { eyebrow: "Funding", title: "Escrow-Backed Funding", description: "Provider funds are held in escrow the moment a project starts, so a valid refund is never blocked by a missing payment.", imageUrl: "", linkText: "How escrow works", href: "/register" },
+      { eyebrow: "Evaluation", title: "Independent Evaluation", description: "Claims are decided by evaluators outside the provider–worker relationship, with AI-assisted mediation reports for context.", imageUrl: "", linkText: "Meet the process", href: "/register" },
+      { eyebrow: "Accountability", title: "Full Audit Trail", description: "Every contract signature, status change, and refund decision is logged and available to admins in real time.", imageUrl: "", linkText: "See the trail", href: "/register" },
     ],
   },
   programmes: {
     visible: true,
-    title: "Our Modules",
+    eyebrow: "How it works",
+    title: "File it. We evaluate it. Resolved.",
     subtitle: "Every stage of a project, covered end to end.",
+    ctaText: "Start your claim",
+    ctaHref: "/register",
     items: [
       { title: "Claim Filing & Evidence", description: "Providers file structured claims with proof documents, ghost-project photos, and message evidence.", imageUrl: "", href: "/register" },
       { title: "AI Mediation", description: "AI-assisted analysis cross-checks evidence and produces a mediation report for evaluators.", imageUrl: "", href: "/register" },
@@ -176,11 +232,59 @@ export const DEFAULT_SETTINGS: HomepageSettings = {
   },
   testimonials: {
     visible: true,
+    eyebrow: "Real people. Real projects.",
     title: "What Our Users Say",
     items: [
-      { quote: "The evidence-based claim process meant we didn't have to argue back and forth — the photos and timestamps spoke for themselves.", name: "Project Provider", role: "Construction" },
-      { quote: "I could see exactly why a claim was decided the way it was. Nothing felt arbitrary.", name: "Skilled Worker", role: "Software Development" },
-      { quote: "Funds being held in escrow from day one changed how confidently we take on new workers.", name: "Project Provider", role: "Design & Creative" },
+      { quote: "The evidence-based claim process meant we didn't have to argue back and forth — the photos and timestamps spoke for themselves.", name: "Project Provider", role: "Construction", avatarUrl: "" },
+      { quote: "I could see exactly why a claim was decided the way it was. Nothing felt arbitrary.", name: "Skilled Worker", role: "Software Development", avatarUrl: "" },
+      { quote: "Funds being held in escrow from day one changed how confidently we take on new workers.", name: "Project Provider", role: "Design & Creative", avatarUrl: "" },
+    ],
+  },
+  packages: {
+    visible: true,
+    eyebrow: "Packages",
+    title: "Pick your plan",
+    subtitle: "Every project is quoted to your scope — no fixed menu, no surprises.",
+    items: [
+      {
+        name: "Single Claim",
+        tagline: "One dispute, resolved end to end.",
+        priceLabel: "Custom quote",
+        features: ["Structured claim filing", "AI evidence check", "Independent evaluation", "Refund processing"],
+        popular: false,
+        ctaText: "Get started",
+        ctaHref: "/register",
+      },
+      {
+        name: "Provider Account",
+        tagline: "Every project, one accountable team.",
+        priceLabel: "Custom quote",
+        features: ["Unlimited claims", "Escrow-backed funding", "Digital contracts", "Full audit trail", "Priority evaluation"],
+        popular: true,
+        ctaText: "Get started",
+        ctaHref: "/register",
+      },
+      {
+        name: "Organisation",
+        tagline: "Teams and institutions at scale.",
+        priceLabel: "Custom quote",
+        features: ["Multi-user access", "Custom reporting", "Dedicated refund office", "Compliance exports"],
+        popular: false,
+        ctaText: "Talk to us",
+        ctaHref: "/register",
+      },
+    ],
+  },
+  faq: {
+    visible: true,
+    eyebrow: "Questions",
+    title: "Frequently asked questions",
+    items: [
+      { question: "What does SSFRS actually do?", answer: "SSFRS manages the full lifecycle of a service failure — from filing a claim with evidence, through independent evaluation, to a processed refund." },
+      { question: "How does the process work?", answer: "A provider files a claim with supporting evidence. Our AI cross-checks it, an independent evaluator decides, and the refund office processes the outcome." },
+      { question: "Who can file a claim?", answer: "Registered project providers can file claims against work delivered on the platform. Workers are notified and can submit their own justification." },
+      { question: "How long does a claim take?", answer: "Most claims move through evaluation within days. Every status change is logged so both parties can track progress in real time." },
+      { question: "Do you work with organisations?", answer: "Yes. Organisations can run multiple users under one account with custom reporting and compliance exports." },
     ],
   },
   partners: {
@@ -204,6 +308,36 @@ export const DEFAULT_SETTINGS: HomepageSettings = {
   },
 };
 
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
+/**
+ * Completes stored settings against DEFAULT_SETTINGS.
+ *
+ * The backend keeps this whole object as one opaque JSON blob, so a row saved
+ * before a field existed is missing it entirely. A shallow spread would leave
+ * those keys `undefined` and crash the page, so objects merge recursively and
+ * each array entry is completed from the first default entry as a template.
+ */
+function withDefaults<T>(defaults: T, saved: unknown): T {
+  if (Array.isArray(defaults)) {
+    if (!Array.isArray(saved)) return defaults;
+    const template = defaults[0];
+    if (!isPlainObject(template)) return saved as unknown as T;
+    return saved.map((item) => withDefaults(template, item)) as unknown as T;
+  }
+  if (isPlainObject(defaults)) {
+    if (!isPlainObject(saved)) return defaults;
+    const out: Record<string, unknown> = { ...defaults };
+    for (const key of Object.keys(defaults)) {
+      out[key] = withDefaults((defaults as Record<string, unknown>)[key], saved[key]);
+    }
+    return out as T;
+  }
+  return (saved === undefined || saved === null ? defaults : saved) as T;
+}
+
 async function fetchUsersFromBackend(role: string): Promise<FeaturedUser[]> {
   try {
     const res = await fetch(`${BACKEND}/api/home/users?role=${role}`, {
@@ -224,11 +358,7 @@ export async function GET() {
   try {
     const res = await fetch(`${BACKEND}/api/home/settings`, { next: { revalidate: 300 } });
     if (res.ok) {
-      const saved: Partial<HomepageSettings> = await res.json();
-      // Shallow-merge per section so rows saved before newer sections existed
-      // (valueProp, differentiators, programmes, testimonials, partners, finalCta)
-      // still fall back to defaults instead of crashing the public page.
-      settings = { ...DEFAULT_SETTINGS, ...saved };
+      settings = withDefaults(DEFAULT_SETTINGS, await res.json());
     }
   } catch {}
 
@@ -244,7 +374,6 @@ export async function GET() {
    *    – If admin hasn't selected anyone          → show ALL from database
    */
   if (settings.providers.featured.length > 0) {
-    const featuredIds = new Set(settings.providers.featured.map((u) => u.id));
     const dbMap = new Map(allProviders.map((u) => [u.id, u]));
     settings.providers.featured = settings.providers.featured
       .map((f) => ({ ...f, ...(dbMap.get(f.id) ?? {}) }))
@@ -254,7 +383,6 @@ export async function GET() {
   }
 
   if (settings.workers.featured.length > 0) {
-    const featuredIds = new Set(settings.workers.featured.map((u) => u.id));
     const dbMap = new Map(allWorkers.map((u) => [u.id, u]));
     settings.workers.featured = settings.workers.featured
       .map((f) => ({ ...f, ...(dbMap.get(f.id) ?? {}) }))

@@ -48,7 +48,9 @@
     "programmesBadge": "Nos Modules",
     "testimonialsBadge": "Témoignages",
     "watchVideo": "Voir la présentation de la plateforme",
-    "learnMore": "En savoir plus"
+    "learnMore": "En savoir plus",
+    "mostPopular": "Le plus populaire",
+    "followUs": "Suivez-nous"
   },
   "Auth": {
     "brandTagline": "Système de Remboursement des Défaillances de Service",

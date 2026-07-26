@@ -7,75 +7,20 @@ import {
   RefreshCw, CheckCircle, Globe, Image as ImageIcon,
   ChevronRight, X, Search, Briefcase, HardHat,
   Quote, Sparkles, LayoutGrid, MessageSquareQuote, Handshake, Megaphone,
+  Package, HelpCircle, Plus, Trash2,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { userService, type UserProfile } from "@/lib/userService";
 import api from "@/lib/api";
+import { DEFAULT_SETTINGS } from "@/app/api/homepage/route";
 import type { HomepageSettings, FeaturedUser } from "@/app/api/homepage/route";
 
-/* ─── Defaults ───────────────────────────────────────────── */
-const DEFAULT: HomepageSettings = {
-  hero: { title: "Service Failure Refund System", subtitle: "A comprehensive platform for managing service claims, evaluating worker performance, and processing refunds.", videoUrl: "", cta1Text: "Get Started", cta1Href: "/register", cta2Text: "Sign In", cta2Href: "/login" },
-  stats: { visible: true, items: [{ label: "Service Providers", value: "500+" }, { label: "Skilled Workers", value: "2,000+" }, { label: "Claims Processed", value: "10,000+" }, { label: "Success Rate", value: "98%" }] },
-  about: { visible: true, title: "Why Choose SSFRS?", description: "Our platform bridges the gap between service providers and skilled workers, ensuring transparent claim resolution and fair refund processing." },
-  providers: { visible: true, title: "Our Service Providers", subtitle: "Trusted organisations managing service projects on our platform.", featured: [] },
-  workers: { visible: true, title: "Our Skilled Workers", subtitle: "Qualified professionals delivering quality service across every sector.", featured: [] },
-  map: { visible: true, title: "Find Us", description: "We operate across Rwanda, connecting service providers and skilled workers nationwide.", embedUrl: "https://www.openstreetmap.org/export/embed.html?bbox=29.9%2C-2.0%2C30.2%2C-1.8&layer=mapnik&marker=-1.9441%2C30.0619", address: "Kigali, Rwanda" },
-  footer: { description: "SSFRS provides a structured approach to service failure management, ensuring fair outcomes for all parties.", email: "info@ssfrs.rw", phone: "+250 788 000 000", address: "KG 11 Ave, Kigali, Rwanda" },
-  valueProp: {
-    visible: true,
-    title: "Built for accountability, not excuses.",
-    body: "SSFRS exists because service failures happen — deadlines slip, work goes undelivered, trust breaks down. We built a platform where every claim is backed by evidence, every decision is auditable, and every refund is processed with the same rigor as the projects it protects.",
-  },
-  differentiators: {
-    visible: true,
-    title: "Why Choose SSFRS",
-    subtitle: "A refund process providers and workers can both trust.",
-    items: [
-      { title: "AI-Verified Evidence", description: "Every claim is checked against GPS-tagged photos, EXIF timestamps, and message history before a human ever reviews it." },
-      { title: "Escrow-Backed Funding", description: "Provider funds are held in escrow the moment a project starts, so a valid refund is never blocked by a missing payment." },
-      { title: "Independent Evaluation", description: "Claims are decided by evaluators outside the provider–worker relationship, with AI-assisted mediation reports for context." },
-      { title: "Full Audit Trail", description: "Every contract signature, status change, and refund decision is logged and available to admins in real time." },
-    ],
-  },
-  programmes: {
-    visible: true,
-    title: "Our Modules",
-    subtitle: "Every stage of a project, covered end to end.",
-    items: [
-      { title: "Claim Filing & Evidence", description: "Providers file structured claims with proof documents, ghost-project photos, and message evidence.", imageUrl: "", href: "/register" },
-      { title: "AI Mediation", description: "AI-assisted analysis cross-checks evidence and produces a mediation report for evaluators.", imageUrl: "", href: "/register" },
-      { title: "Contract Validation", description: "Digital contracts are signed by both parties and validated by admins before work begins.", imageUrl: "", href: "/register" },
-      { title: "Refund Processing", description: "Approved claims move through a dedicated refund office with full status tracking.", imageUrl: "", href: "/register" },
-    ],
-  },
-  testimonials: {
-    visible: true,
-    title: "What Our Users Say",
-    items: [
-      { quote: "The evidence-based claim process meant we didn't have to argue back and forth — the photos and timestamps spoke for themselves.", name: "Project Provider", role: "Construction" },
-      { quote: "I could see exactly why a claim was decided the way it was. Nothing felt arbitrary.", name: "Skilled Worker", role: "Software Development" },
-      { quote: "Funds being held in escrow from day one changed how confidently we take on new workers.", name: "Project Provider", role: "Design & Creative" },
-    ],
-  },
-  partners: {
-    visible: true,
-    title: "Trusted By",
-    items: [
-      { name: "", logoUrl: "" }, { name: "", logoUrl: "" }, { name: "", logoUrl: "" },
-      { name: "", logoUrl: "" }, { name: "", logoUrl: "" }, { name: "", logoUrl: "" },
-    ],
-  },
-  finalCta: {
-    visible: true,
-    title: "Ready to protect every project?",
-    subtitle: "Join providers and workers already using SSFRS to file, evaluate, and resolve service claims with full transparency.",
-    ctaText: "Create your account",
-    ctaHref: "/register",
-  },
-};
+/* ─── Defaults ─────────────────────────────────────────────
+   Re-uses the public route's defaults so the editor and the live page can
+   never disagree about the shape of a section. */
+const DEFAULT: HomepageSettings = DEFAULT_SETTINGS;
 
-type Tab = "hero" | "valueProp" | "stats" | "differentiators" | "programmes" | "providers" | "workers" | "testimonials" | "partners" | "map" | "finalCta" | "footer";
+type Tab = "hero" | "valueProp" | "stats" | "differentiators" | "programmes" | "providers" | "workers" | "testimonials" | "packages" | "faq" | "partners" | "map" | "finalCta" | "footer";
 
 const TABS: Array<{ id: Tab; label: string; icon: React.ReactNode }> = [
   { id: "hero", label: "Hero & Video", icon: <Video style={{ width: 16, height: 16 }} /> },
@@ -86,6 +31,8 @@ const TABS: Array<{ id: Tab; label: string; icon: React.ReactNode }> = [
   { id: "providers", label: "Providers", icon: <Briefcase style={{ width: 16, height: 16 }} /> },
   { id: "workers", label: "Workers", icon: <HardHat style={{ width: 16, height: 16 }} /> },
   { id: "testimonials", label: "Testimonials", icon: <MessageSquareQuote style={{ width: 16, height: 16 }} /> },
+  { id: "packages", label: "Packages", icon: <Package style={{ width: 16, height: 16 }} /> },
+  { id: "faq", label: "FAQ", icon: <HelpCircle style={{ width: 16, height: 16 }} /> },
   { id: "partners", label: "Partners", icon: <Handshake style={{ width: 16, height: 16 }} /> },
   { id: "map", label: "Map & Contact", icon: <MapPin style={{ width: 16, height: 16 }} /> },
   { id: "finalCta", label: "Closing CTA", icon: <Megaphone style={{ width: 16, height: 16 }} /> },
@@ -429,30 +376,30 @@ export default function HomeControllerPage() {
   const setValueProp = (patch: Partial<HomepageSettings["valueProp"]>) =>
     setSettings((s) => ({ ...s, valueProp: { ...s.valueProp, ...patch } }));
 
-  const setDifferentiators = (patch: Partial<Pick<HomepageSettings["differentiators"], "visible" | "title" | "subtitle">>) =>
+  const setDifferentiators = (patch: Partial<Omit<HomepageSettings["differentiators"], "items">>) =>
     setSettings((s) => ({ ...s, differentiators: { ...s.differentiators, ...patch } }));
 
-  const setDifferentiatorItem = (i: number, patch: Partial<{ title: string; description: string }>) =>
+  const setDifferentiatorItem = (i: number, patch: Partial<HomepageSettings["differentiators"]["items"][number]>) =>
     setSettings((s) => {
       const items = [...s.differentiators.items];
       items[i] = { ...items[i], ...patch };
       return { ...s, differentiators: { ...s.differentiators, items } };
     });
 
-  const setProgrammes = (patch: Partial<Pick<HomepageSettings["programmes"], "visible" | "title" | "subtitle">>) =>
+  const setProgrammes = (patch: Partial<Omit<HomepageSettings["programmes"], "items">>) =>
     setSettings((s) => ({ ...s, programmes: { ...s.programmes, ...patch } }));
 
-  const setProgrammeItem = (i: number, patch: Partial<{ title: string; description: string; imageUrl: string; href: string }>) =>
+  const setProgrammeItem = (i: number, patch: Partial<HomepageSettings["programmes"]["items"][number]>) =>
     setSettings((s) => {
       const items = [...s.programmes.items];
       items[i] = { ...items[i], ...patch };
       return { ...s, programmes: { ...s.programmes, items } };
     });
 
-  const setTestimonials = (patch: Partial<Pick<HomepageSettings["testimonials"], "visible" | "title">>) =>
+  const setTestimonials = (patch: Partial<Omit<HomepageSettings["testimonials"], "items">>) =>
     setSettings((s) => ({ ...s, testimonials: { ...s.testimonials, ...patch } }));
 
-  const setTestimonialItem = (i: number, patch: Partial<{ quote: string; name: string; role: string }>) =>
+  const setTestimonialItem = (i: number, patch: Partial<HomepageSettings["testimonials"]["items"][number]>) =>
     setSettings((s) => {
       const items = [...s.testimonials.items];
       items[i] = { ...items[i], ...patch };
@@ -471,6 +418,46 @@ export default function HomeControllerPage() {
 
   const setFinalCta = (patch: Partial<HomepageSettings["finalCta"]>) =>
     setSettings((s) => ({ ...s, finalCta: { ...s.finalCta, ...patch } }));
+
+  const setHeroImage = (i: number, patch: Partial<{ url: string; label: string }>) =>
+    setSettings((s) => {
+      const images = [...s.hero.images];
+      images[i] = { ...images[i], ...patch };
+      return { ...s, hero: { ...s.hero, images } };
+    });
+
+  const setPackages = (patch: Partial<Pick<HomepageSettings["packages"], "visible" | "eyebrow" | "title" | "subtitle">>) =>
+    setSettings((s) => ({ ...s, packages: { ...s.packages, ...patch } }));
+
+  const setPackageItem = (i: number, patch: Partial<HomepageSettings["packages"]["items"][number]>) =>
+    setSettings((s) => {
+      const items = [...s.packages.items];
+      items[i] = { ...items[i], ...patch };
+      return { ...s, packages: { ...s.packages, items } };
+    });
+
+  const setFaq = (patch: Partial<Pick<HomepageSettings["faq"], "visible" | "eyebrow" | "title">>) =>
+    setSettings((s) => ({ ...s, faq: { ...s.faq, ...patch } }));
+
+  const setFaqItem = (i: number, patch: Partial<{ question: string; answer: string }>) =>
+    setSettings((s) => {
+      const items = [...s.faq.items];
+      items[i] = { ...items[i], ...patch };
+      return { ...s, faq: { ...s.faq, items } };
+    });
+
+  const addFaqItem = () =>
+    setSettings((s) => ({ ...s, faq: { ...s.faq, items: [...s.faq.items, { question: "", answer: "" }] } }));
+
+  const removeFaqItem = (i: number) =>
+    setSettings((s) => ({ ...s, faq: { ...s.faq, items: s.faq.items.filter((_, x) => x !== i) } }));
+
+  const setSocial = (i: number, patch: Partial<{ label: string; href: string }>) =>
+    setSettings((s) => {
+      const socials = [...s.footer.socials];
+      socials[i] = { ...socials[i], ...patch };
+      return { ...s, footer: { ...s.footer, socials } };
+    });
 
   const toggleFeatured = useCallback((user: UserProfile, sectionKey: "providers" | "workers") => {
     setSettings((s) => {
@@ -572,8 +559,30 @@ export default function HomeControllerPage() {
           <div style={CARD}>
             <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.13em", color: "var(--color-muted-foreground)", marginBottom: "1.25rem" }}>Hero Section</p>
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <Field label="Eyebrow (small label above the headline)"><Input value={settings.hero.eyebrow} onChange={(v) => setHero({ eyebrow: v })} placeholder="Service Failure Refund Platform" /></Field>
               <Field label="Headline"><Input value={settings.hero.title} onChange={(v) => setHero({ title: v })} placeholder="Service Failure Refund System" /></Field>
               <Field label="Subtitle"><Textarea value={settings.hero.subtitle} onChange={(v) => setHero({ subtitle: v })} rows={3} /></Field>
+            </div>
+          </div>
+
+          <div style={CARD}>
+            <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.13em", color: "var(--color-muted-foreground)", marginBottom: "0.35rem" }}>Hero Image Collage</p>
+            <p style={{ fontSize: "0.8125rem", color: "var(--color-muted-foreground)", marginBottom: "1.25rem" }}>
+              Three overlapping photos beside the headline. The caption becomes the pill label on the image.
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: "1rem" }}>
+              {settings.hero.images.map((img, i) => (
+                <div key={i} style={{ padding: "1.125rem", borderRadius: 10, border: "1px solid var(--color-border)", display: "flex", flexDirection: "column", gap: "0.625rem" }}>
+                  <ImageUploadField
+                    path={`hero.images.${i}.url`}
+                    url={img.url}
+                    onUploaded={(url) => setHeroImage(i, { url })}
+                    onRemoved={() => setHeroImage(i, { url: "" })}
+                    label={`Upload image ${i + 1}`}
+                  />
+                  <Field label="Caption"><Input value={img.label} onChange={(v) => setHeroImage(i, { label: v })} placeholder="Claims" /></Field>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -724,6 +733,9 @@ export default function HomeControllerPage() {
             <Toggle checked={settings.valueProp.visible} onChange={(v) => setValueProp({ visible: v })} label="Visible" />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <Field label="Eyebrow (small label above the headline)">
+              <Input value={settings.about.eyebrow} onChange={(v) => setAbout({ eyebrow: v })} placeholder="Every problem. One team." />
+            </Field>
             <Field label="Headline"><Input value={settings.valueProp.title} onChange={(v) => setValueProp({ title: v })} /></Field>
             <Field label="Body text"><Textarea value={settings.valueProp.body} onChange={(v) => setValueProp({ body: v })} rows={4} /></Field>
           </div>
@@ -756,14 +768,25 @@ export default function HomeControllerPage() {
             <Toggle checked={settings.differentiators.visible} onChange={(v) => setDifferentiators({ visible: v })} label="Visible" />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem", marginBottom: "1.25rem" }}>
+            <Field label="Eyebrow"><Input value={settings.differentiators.eyebrow} onChange={(v) => setDifferentiators({ eyebrow: v })} /></Field>
             <Field label="Section Title"><Input value={settings.differentiators.title} onChange={(v) => setDifferentiators({ title: v })} /></Field>
             <Field label="Subtitle"><Input value={settings.differentiators.subtitle} onChange={(v) => setDifferentiators({ subtitle: v })} /></Field>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1rem" }}>
             {settings.differentiators.items.map((item, i) => (
               <div key={i} style={{ padding: "1.125rem", borderRadius: 10, border: "1px solid var(--color-border)", display: "flex", flexDirection: "column", gap: "0.625rem" }}>
+                <ImageUploadField
+                  path={`differentiators.items.${i}.imageUrl`}
+                  url={item.imageUrl}
+                  onUploaded={(url) => setDifferentiatorItem(i, { imageUrl: url })}
+                  onRemoved={() => setDifferentiatorItem(i, { imageUrl: "" })}
+                  label="Upload row image"
+                />
+                <Field label="Eyebrow"><Input value={item.eyebrow} onChange={(v) => setDifferentiatorItem(i, { eyebrow: v })} /></Field>
                 <Field label="Title"><Input value={item.title} onChange={(v) => setDifferentiatorItem(i, { title: v })} /></Field>
                 <Field label="Description"><Textarea value={item.description} onChange={(v) => setDifferentiatorItem(i, { description: v })} rows={3} /></Field>
+                <Field label="Link text"><Input value={item.linkText} onChange={(v) => setDifferentiatorItem(i, { linkText: v })} placeholder="Learn more" /></Field>
+                <Field label="Link URL"><Input value={item.href} onChange={(v) => setDifferentiatorItem(i, { href: v })} placeholder="/register" /></Field>
               </div>
             ))}
           </div>
@@ -774,12 +797,17 @@ export default function HomeControllerPage() {
       {tab === "programmes" && (
         <motion.div key="programmes" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={CARD}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem" }}>
-            <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.13em", color: "var(--color-muted-foreground)" }}>Modules — the platform's core workflow, shown as image tiles</p>
+            <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.13em", color: "var(--color-muted-foreground)" }}>Modules — the platform&rsquo;s core workflow, shown as image tiles</p>
             <Toggle checked={settings.programmes.visible} onChange={(v) => setProgrammes({ visible: v })} label="Visible" />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem", marginBottom: "1.25rem" }}>
+            <Field label="Eyebrow"><Input value={settings.programmes.eyebrow} onChange={(v) => setProgrammes({ eyebrow: v })} /></Field>
             <Field label="Section Title"><Input value={settings.programmes.title} onChange={(v) => setProgrammes({ title: v })} /></Field>
             <Field label="Subtitle"><Input value={settings.programmes.subtitle} onChange={(v) => setProgrammes({ subtitle: v })} /></Field>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.875rem" }}>
+              <Field label="Button text"><Input value={settings.programmes.ctaText} onChange={(v) => setProgrammes({ ctaText: v })} placeholder="Start your claim" /></Field>
+              <Field label="Button link"><Input value={settings.programmes.ctaHref} onChange={(v) => setProgrammes({ ctaHref: v })} placeholder="/register" /></Field>
+            </div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1rem" }}>
             {settings.programmes.items.map((item, i) => (
@@ -907,18 +935,99 @@ export default function HomeControllerPage() {
             <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.13em", color: "var(--color-muted-foreground)" }}>Testimonials</p>
             <Toggle checked={settings.testimonials.visible} onChange={(v) => setTestimonials({ visible: v })} label="Visible" />
           </div>
-          <div style={{ marginBottom: "1.25rem" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem", marginBottom: "1.25rem" }}>
+            <Field label="Eyebrow"><Input value={settings.testimonials.eyebrow} onChange={(v) => setTestimonials({ eyebrow: v })} /></Field>
             <Field label="Section Title"><Input value={settings.testimonials.title} onChange={(v) => setTestimonials({ title: v })} /></Field>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1rem" }}>
             {settings.testimonials.items.map((item, i) => (
               <div key={i} style={{ padding: "1.125rem", borderRadius: 10, border: "1px solid var(--color-border)", display: "flex", flexDirection: "column", gap: "0.625rem" }}>
+                <div style={{ maxWidth: 96 }}>
+                  <ImageUploadField
+                    path={`testimonials.items.${i}.avatarUrl`}
+                    url={item.avatarUrl}
+                    onUploaded={(url) => setTestimonialItem(i, { avatarUrl: url })}
+                    onRemoved={() => setTestimonialItem(i, { avatarUrl: "" })}
+                    label="Photo"
+                    aspect="1/1"
+                  />
+                </div>
                 <Field label="Quote"><Textarea value={item.quote} onChange={(v) => setTestimonialItem(i, { quote: v })} rows={3} /></Field>
                 <Field label="Name / label (e.g. Project Provider)"><Input value={item.name} onChange={(v) => setTestimonialItem(i, { name: v })} /></Field>
                 <Field label="Sector / role"><Input value={item.role} onChange={(v) => setTestimonialItem(i, { role: v })} /></Field>
               </div>
             ))}
           </div>
+        </motion.div>
+      )}
+
+      {/* PACKAGES */}
+      {tab === "packages" && (
+        <motion.div key="packages" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={CARD}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem" }}>
+            <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.13em", color: "var(--color-muted-foreground)" }}>Packages — pricing cards</p>
+            <Toggle checked={settings.packages.visible} onChange={(v) => setPackages({ visible: v })} label="Visible" />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem", marginBottom: "1.25rem" }}>
+            <Field label="Eyebrow"><Input value={settings.packages.eyebrow} onChange={(v) => setPackages({ eyebrow: v })} /></Field>
+            <Field label="Section Title"><Input value={settings.packages.title} onChange={(v) => setPackages({ title: v })} /></Field>
+            <Field label="Subtitle"><Input value={settings.packages.subtitle} onChange={(v) => setPackages({ subtitle: v })} /></Field>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1rem" }}>
+            {settings.packages.items.map((item, i) => (
+              <div key={i} style={{ padding: "1.125rem", borderRadius: 10, border: "1px solid var(--color-border)", display: "flex", flexDirection: "column", gap: "0.625rem" }}>
+                <Field label="Package name"><Input value={item.name} onChange={(v) => setPackageItem(i, { name: v })} /></Field>
+                <Field label="Tagline"><Input value={item.tagline} onChange={(v) => setPackageItem(i, { tagline: v })} /></Field>
+                <Field label="Price label"><Input value={item.priceLabel} onChange={(v) => setPackageItem(i, { priceLabel: v })} placeholder="Custom quote" /></Field>
+                <Field label="Features — one per line">
+                  <Textarea
+                    value={item.features.join("\n")}
+                    onChange={(v) => setPackageItem(i, { features: v.split("\n") })}
+                    rows={5}
+                  />
+                </Field>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.625rem" }}>
+                  <Field label="Button text"><Input value={item.ctaText} onChange={(v) => setPackageItem(i, { ctaText: v })} /></Field>
+                  <Field label="Button link"><Input value={item.ctaHref} onChange={(v) => setPackageItem(i, { ctaHref: v })} placeholder="/register" /></Field>
+                </div>
+                <Toggle checked={item.popular} onChange={(v) => setPackageItem(i, { popular: v })} label="Most popular" />
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* FAQ */}
+      {tab === "faq" && (
+        <motion.div key="faq" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={CARD}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem" }}>
+            <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.13em", color: "var(--color-muted-foreground)" }}>FAQ — accordion</p>
+            <Toggle checked={settings.faq.visible} onChange={(v) => setFaq({ visible: v })} label="Visible" />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem", marginBottom: "1.25rem" }}>
+            <Field label="Eyebrow"><Input value={settings.faq.eyebrow} onChange={(v) => setFaq({ eyebrow: v })} /></Field>
+            <Field label="Section Title"><Input value={settings.faq.title} onChange={(v) => setFaq({ title: v })} /></Field>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+            {settings.faq.items.map((item, i) => (
+              <div key={i} style={{ padding: "1.125rem", borderRadius: 10, border: "1px solid var(--color-border)", display: "flex", flexDirection: "column", gap: "0.625rem" }}>
+                <div style={{ display: "flex", alignItems: "flex-end", gap: "0.625rem" }}>
+                  <div style={{ flex: 1 }}>
+                    <Field label={`Question ${i + 1}`}><Input value={item.question} onChange={(v) => setFaqItem(i, { question: v })} /></Field>
+                  </div>
+                  <button type="button" onClick={() => removeFaqItem(i)} title="Remove question"
+                    style={{ padding: "0.6rem", borderRadius: 9, border: "1.5px solid var(--color-border)", background: "var(--color-card)", color: "#ef4444", cursor: "pointer", display: "flex" }}>
+                    <Trash2 style={{ width: 15, height: 15 }} />
+                  </button>
+                </div>
+                <Field label="Answer"><Textarea value={item.answer} onChange={(v) => setFaqItem(i, { answer: v })} rows={3} /></Field>
+              </div>
+            ))}
+          </div>
+          <button type="button" onClick={addFaqItem}
+            style={{ marginTop: "1rem", display: "inline-flex", alignItems: "center", gap: "0.375rem", padding: "0.55rem 1rem", borderRadius: 9, fontSize: "0.8125rem", fontWeight: 600, border: "1.5px dashed var(--color-border)", background: "transparent", color: "var(--color-foreground)", cursor: "pointer" }}>
+            <Plus style={{ width: 14, height: 14 }} /> Add question
+          </button>
         </motion.div>
       )}
 
@@ -1009,6 +1118,21 @@ export default function HomeControllerPage() {
               <Field label="Email"><Input value={settings.footer.email} onChange={(v) => setFooter({ email: v })} placeholder="info@ssfrs.rw" /></Field>
               <Field label="Phone"><Input value={settings.footer.phone} onChange={(v) => setFooter({ phone: v })} placeholder="+250 788 000 000" /></Field>
               <Field label="Address"><Input value={settings.footer.address} onChange={(v) => setFooter({ address: v })} placeholder="Kigali, Rwanda" /></Field>
+            </div>
+          </div>
+
+          <div style={{ marginTop: "1.75rem", paddingTop: "1.5rem", borderTop: "1px solid var(--color-border)" }}>
+            <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.13em", color: "var(--color-muted-foreground)", marginBottom: "0.35rem" }}>Social Links</p>
+            <p style={{ fontSize: "0.8125rem", color: "var(--color-muted-foreground)", marginBottom: "1rem" }}>
+              Leave a URL blank to hide that icon. Known labels (LinkedIn, X, Instagram, Email) get their own icon.
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1rem" }}>
+              {settings.footer.socials.map((s, i) => (
+                <div key={i} style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  <Field label="Label"><Input value={s.label} onChange={(v) => setSocial(i, { label: v })} placeholder="LinkedIn" /></Field>
+                  <Field label="URL"><Input value={s.href} onChange={(v) => setSocial(i, { href: v })} placeholder="https://…" /></Field>
+                </div>
+              ))}
             </div>
           </div>
         </motion.div>
