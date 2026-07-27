@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback, useSyncExternalStore } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo, useSyncExternalStore } from "react";
 import { Link } from "@/navigation";
 import { motion } from "framer-motion";
 import {
   ArrowRight, Menu, X, Star, Plus, Minus, Check,
   MapPin, Phone, Mail, Moon, Sun, ImageIcon, Globe,
 } from "lucide-react";
-import type { HomepageSettings, FeaturedUser } from "../api/homepage/route";
-import { useTranslations } from "next-intl";
+import { localizeSettings } from "@/lib/homepage";
+import type { HomepageSettings, FeaturedUser } from "@/lib/homepage";
+import { useTranslations, useLocale } from "next-intl";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 /* ── Design tokens ────────────────────────────────────────────────────────
@@ -27,9 +28,23 @@ const HOME_CSS = `
   color: #fff;
   overflow-x: hidden;
 }
+/* Dark theme — same layout, near-black canvas instead of the forest green.
+   Only the tokens change, so every section follows automatically. */
+:root[data-theme="dark"] .hp {
+  --hp-green: #0B1310;
+  --hp-green-soft: #131E19;
+  --hp-black: #000000;
+  --hp-muted: #93A69C;
+  --hp-line: rgba(255,255,255,0.08);
+}
+:root[data-theme="dark"] .hp-ph {
+  background: linear-gradient(140deg, #16241E 0%, #0F1A16 100%);
+}
+
 /* Keeps the page's own colour behind any overscroll / short-content gap
    instead of the white body default. */
 body:has(.hp) { background: #0A0A0A; }
+:root[data-theme="dark"] body:has(.hp) { background: #000000; }
 .hp h1, .hp h2, .hp h3, .hp h4 { color: #fff; }
 .hp section { padding: 4.5rem 1.5rem; }
 .hp-wrap { max-width: 1240px; margin: 0 auto; width: 100%; }
@@ -432,12 +447,20 @@ const SOCIAL_ICONS: Record<string, React.ReactNode> = {
 export default function HomePage() {
   const t = useTranslations("Home");
   const tNav = useTranslations("Nav");
-  const [settings, setSettings] = useState<HomepageSettings | null>(null);
+  const locale = useLocale();
+  const [raw, setRaw] = useState<HomepageSettings | null>(null);
   const [navOpen, setNavOpen] = useState(false);
 
   useEffect(() => {
-    fetch("/api/homepage").then((r) => r.json()).then(setSettings).catch(() => {});
+    fetch("/api/homepage").then((r) => r.json()).then(setRaw).catch(() => {});
   }, []);
+
+  /* Admin-authored copy lives in the database in one base language; this
+     overlays whatever has been translated for the active locale. */
+  const settings = useMemo(
+    () => (raw ? localizeSettings(raw, locale) : null),
+    [raw, locale]
+  );
 
   /* The theme lives on <html>, not in React. Subscribing to the same
      "themechange" event the dashboard header dispatches keeps this icon in

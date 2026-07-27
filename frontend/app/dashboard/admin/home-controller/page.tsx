@@ -10,8 +10,8 @@ import {
 import { toast } from "react-toastify";
 import { userService, type UserProfile } from "@/lib/userService";
 import api from "@/lib/api";
-import { DEFAULT_SETTINGS } from "@/app/api/homepage/route";
-import type { HomepageSettings, FeaturedUser } from "@/app/api/homepage/route";
+import { DEFAULT_SETTINGS } from "@/lib/homepage";
+import type { HomepageSettings, FeaturedUser } from "@/lib/homepage";
 
 /* ─── Defaults ───────────────────────────────────────────── */
 const DEFAULT: HomepageSettings = DEFAULT_SETTINGS;

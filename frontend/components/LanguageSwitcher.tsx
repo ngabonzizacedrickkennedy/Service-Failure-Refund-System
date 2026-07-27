@@ -2,6 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/navigation";
+import type { Locale } from "@/i18n/routing";
 import { useState } from "react";
 import { Globe, ChevronDown } from "lucide-react";
 
@@ -9,6 +10,10 @@ const LOCALES = [
   { code: "en", flag: "🇬🇧" },
   { code: "fr", flag: "🇫🇷" },
   { code: "rw", flag: "🇷🇼" },
+  { code: "es", flag: "🇪🇸" },
+  { code: "de", flag: "🇩🇪" },
+  { code: "it", flag: "🇮🇹" },
+  { code: "pt", flag: "🇵🇹" },
 ] as const;
 
 interface Props {
@@ -61,7 +66,7 @@ export default function LanguageSwitcher({ variant = "dark" }: Props) {
       >
         <Globe style={{ width: 14, height: 14 }} />
         <span>{current.flag}</span>
-        <span>{t(current.code as "en" | "fr" | "rw")}</span>
+        <span>{t(current.code as Locale)}</span>
         <ChevronDown
           style={{
             width: 12,
@@ -119,7 +124,7 @@ export default function LanguageSwitcher({ variant = "dark" }: Props) {
                 }}
               >
                 <span>{loc.flag}</span>
-                <span>{t(loc.code as "en" | "fr" | "rw")}</span>
+                <span>{t(loc.code as Locale)}</span>
               </button>
             ))}
           </div>

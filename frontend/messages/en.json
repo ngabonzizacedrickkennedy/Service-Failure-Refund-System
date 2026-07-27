@@ -373,6 +373,10 @@
     "language": "Language",
     "en": "English",
     "fr": "Français",
-    "rw": "Kinyarwanda"
+    "rw": "Kinyarwanda",
+    "es": "Español",
+    "de": "Deutsch",
+    "it": "Italiano",
+    "pt": "Português"
   }
 }

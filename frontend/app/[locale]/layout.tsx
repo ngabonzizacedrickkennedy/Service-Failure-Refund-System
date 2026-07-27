@@ -6,7 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { routing } from "@/i18n/routing";
+import { routing, type Locale } from "@/i18n/routing";
 
 // Auth-gated app — render on demand instead of prerendering at build time.
 export const dynamic = "force-dynamic";
@@ -31,14 +31,35 @@ export default async function LocaleLayout({
 }) {
   const { locale } = await params;
 
-  if (!routing.locales.includes(locale as "en" | "fr" | "rw")) {
+  if (!routing.locales.includes(locale as Locale)) {
     notFound();
   }
 
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className={`${inter.variable} h-full antialiased`}>
+    // suppressHydrationWarning: the inline script below stamps data-theme on
+    // <html> before hydration, which React would otherwise flag as a mismatch.
+    // It only suppresses this one element's attributes, nothing nested.
+    <html
+      lang={locale}
+      className={`${inter.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
+      <head>
+        {/*
+          Restores the saved theme before first paint. Without this the choice
+          only survived inside the dashboard (Header re-applied it on mount),
+          so the public pages always came back light — and applying it after
+          hydration would flash the wrong theme first.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(localStorage.getItem('theme')==='dark')document.documentElement.setAttribute('data-theme','dark')}catch(e){}",
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider messages={messages}>
           {children}

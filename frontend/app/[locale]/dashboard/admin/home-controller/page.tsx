@@ -7,13 +7,13 @@ import {
   RefreshCw, CheckCircle, Globe, Image as ImageIcon,
   ChevronRight, X, Search, Briefcase, HardHat,
   Quote, Sparkles, LayoutGrid, MessageSquareQuote, Handshake, Megaphone,
-  Package, HelpCircle, Plus, Trash2,
+  Package, HelpCircle, Plus, Trash2, Languages,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { userService, type UserProfile } from "@/lib/userService";
 import api from "@/lib/api";
-import { DEFAULT_SETTINGS } from "@/app/api/homepage/route";
-import type { HomepageSettings, FeaturedUser } from "@/app/api/homepage/route";
+import { DEFAULT_SETTINGS, translatablePaths, getAtPath } from "@/lib/homepage";
+import type { HomepageSettings, FeaturedUser } from "@/lib/homepage";
 
 /* ─── Defaults ─────────────────────────────────────────────
    Re-uses the public route's defaults so the editor and the live page can
@@ -37,6 +37,17 @@ const TABS: Array<{ id: Tab; label: string; icon: React.ReactNode }> = [
   { id: "map", label: "Map & Contact", icon: <MapPin style={{ width: 16, height: 16 }} /> },
   { id: "finalCta", label: "Closing CTA", icon: <Megaphone style={{ width: 16, height: 16 }} /> },
   { id: "footer", label: "Footer", icon: <FileText style={{ width: 16, height: 16 }} /> },
+];
+
+/** Base content plus every locale the site is published in. */
+const EDIT_LOCALES: Array<{ code: string; label: string; flag: string }> = [
+  { code: "", label: "Base", flag: "🌐" },
+  { code: "fr", label: "Français", flag: "🇫🇷" },
+  { code: "rw", label: "Kinyarwanda", flag: "🇷🇼" },
+  { code: "es", label: "Español", flag: "🇪🇸" },
+  { code: "de", label: "Deutsch", flag: "🇩🇪" },
+  { code: "it", label: "Italiano", flag: "🇮🇹" },
+  { code: "pt", label: "Português", flag: "🇵🇹" },
 ];
 
 /* ─── Helpers ────────────────────────────────────────────── */
@@ -255,6 +266,8 @@ function UserCard({
 /* ─── Main page ───────────────────────────────────────────── */
 export default function HomeControllerPage() {
   const [tab, setTab] = useState<Tab>("hero");
+  /** "" = editing the base (English) content; otherwise a locale being translated. */
+  const [editLocale, setEditLocale] = useState<string>("");
   const [settings, setSettings] = useState<HomepageSettings>(DEFAULT);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -482,6 +495,35 @@ export default function HomeControllerPage() {
     border: "1px solid var(--color-border)", boxShadow: "var(--shadow-card)", padding: "1.5rem",
   };
 
+  /* ── Translation mode ──────────────────────────────────────────────────
+     Rather than duplicating every field per language, translation mode
+     generates one input per translatable string in the selected section.
+     Paths are derived from the settings object, so a field added later is
+     translatable straight away.                                          */
+  const setTranslation = (path: string, value: string) =>
+    setSettings((s) => {
+      const forLocale = { ...(s.translations?.[editLocale] ?? {}) };
+      if (value.trim()) forLocale[path] = value;
+      else delete forLocale[path];
+      return { ...s, translations: { ...(s.translations ?? {}), [editLocale]: forLocale } };
+    });
+
+  const sectionPaths = translatablePaths(settings).filter((p) => p.startsWith(`${tab}.`) || p === tab);
+  const localeOverrides = settings.translations?.[editLocale] ?? {};
+  const translatedCount = sectionPaths.filter((p) => localeOverrides[p]?.trim()).length;
+
+  /** "hero.images.0.label" → "Images › 1 › Label" */
+  const prettyPath = (path: string) =>
+    path
+      .split(".")
+      .slice(1)
+      .map((part) =>
+        /^\d+$/.test(part)
+          ? String(Number(part) + 1)
+          : part.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase()).trim()
+      )
+      .join(" › ");
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", maxWidth: 1100 }}>
 
@@ -530,6 +572,36 @@ export default function HomeControllerPage() {
         </div>
       </div>
 
+      {/* ── Language bar ── */}
+      <div style={{ ...CARD, padding: "1rem 1.25rem", display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.13em", color: "var(--color-muted-foreground)" }}>
+          <Languages style={{ width: 14, height: 14 }} /> Editing
+        </span>
+        {EDIT_LOCALES.map((l) => {
+          const active = editLocale === l.code;
+          return (
+            <button
+              key={l.code || "base"}
+              onClick={() => setEditLocale(l.code)}
+              style={{
+                padding: "0.4rem 0.85rem", borderRadius: 999, fontSize: "0.8125rem", fontWeight: 600,
+                border: active ? "1.5px solid #5B4FE5" : "1.5px solid var(--color-border)",
+                backgroundColor: active ? "#EEF2FF" : "var(--color-card)",
+                color: active ? "#5B4FE5" : "var(--color-muted-foreground)",
+                cursor: "pointer", transition: "all 0.15s",
+              }}
+            >
+              {l.flag} {l.label}
+            </button>
+          );
+        })}
+        <span style={{ fontSize: "0.75rem", color: "var(--color-muted-foreground)", marginLeft: "auto" }}>
+          {editLocale
+            ? "Blank fields fall back to the base text."
+            : "Base content — images, links and toggles live here."}
+        </span>
+      </div>
+
       {/* ── Tabs ── */}
       <div style={{ display: "flex", gap: "0.375rem", flexWrap: "wrap" }}>
         {TABS.map((t) => (
@@ -551,7 +623,50 @@ export default function HomeControllerPage() {
         ))}
       </div>
 
+      {/* ── Translation form (replaces the section editors while a locale is selected) ── */}
+      {editLocale && (
+        <motion.div key={"tr-" + tab + editLocale} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={CARD}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem", flexWrap: "wrap", gap: "0.5rem" }}>
+            <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.13em", color: "var(--color-muted-foreground)" }}>
+              {TABS.find((t) => t.id === tab)?.label} — {EDIT_LOCALES.find((l) => l.code === editLocale)?.label}
+            </p>
+            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: translatedCount === sectionPaths.length ? "#16a34a" : "var(--color-muted-foreground)" }}>
+              {translatedCount} / {sectionPaths.length} translated
+            </span>
+          </div>
+
+          {sectionPaths.length === 0 ? (
+            <p style={{ fontSize: "0.875rem", color: "var(--color-muted-foreground)" }}>
+              Nothing to translate in this section.
+            </p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.125rem" }}>
+              {sectionPaths.map((path) => {
+                const base = getAtPath(settings, path);
+                const long = base.length > 70;
+                return (
+                  <div key={path} style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
+                    <label style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--color-foreground)" }}>
+                      {prettyPath(path)}
+                    </label>
+                    <p style={{ fontSize: "0.8125rem", color: "var(--color-muted-foreground)", lineHeight: 1.55, paddingLeft: "0.6rem", borderLeft: "2px solid var(--color-border)" }}>
+                      {base}
+                    </p>
+                    {long ? (
+                      <Textarea value={localeOverrides[path] ?? ""} onChange={(v) => setTranslation(path, v)} rows={3} placeholder="Leave blank to keep the base text" />
+                    ) : (
+                      <Input value={localeOverrides[path] ?? ""} onChange={(v) => setTranslation(path, v)} placeholder="Leave blank to keep the base text" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </motion.div>
+      )}
+
       {/* ── Tab content ── */}
+      {!editLocale && (<>
 
       {/* HERO */}
       {tab === "hero" && (
@@ -1137,6 +1252,7 @@ export default function HomeControllerPage() {
           </div>
         </motion.div>
       )}
+      </>)}
 
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>

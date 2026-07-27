@@ -8,7 +8,7 @@ import {
   Users, MapPin, Phone, Mail, Menu, X, Star,
   Briefcase, Award, CheckCircle,
 } from "lucide-react";
-import type { HomepageSettings, FeaturedUser } from "./api/homepage/route";
+import type { HomepageSettings, FeaturedUser } from "@/lib/homepage";
 
 const ACCENT = "#2563EB";
 
