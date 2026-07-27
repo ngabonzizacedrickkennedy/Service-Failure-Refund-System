@@ -236,8 +236,25 @@ public class HomeController {
         if (entity != null && entity.getVideoS3Key() != null) {
             s3UploadService.deleteProfileImage(entity.getVideoS3Key());
             entity.setVideoS3Key(null);
+            /*
+             * Also blank the URL held in settingsJson. GET /settings only refreshes
+             * hero.videoUrl while videoS3Key is set, so leaving the old presigned URL
+             * behind strands it: the admin removes the video without pressing Save,
+             * and the homepage keeps serving a link that 403s once it expires.
+             */
+            clearHeroVideoUrl(entity);
             settingsRepo.save(entity);
         }
         return ResponseEntity.ok().build();
+    }
+
+    private void clearHeroVideoUrl(HomepageSettings entity) {
+        if (entity.getSettingsJson() == null || entity.getSettingsJson().isBlank()) return;
+        try {
+            JsonNode root = MAPPER.readTree(entity.getSettingsJson());
+            if (setAtPath(root, "hero.videoUrl", "")) {
+                entity.setSettingsJson(MAPPER.writeValueAsString(root));
+            }
+        } catch (Exception ignored) {}
     }
 }

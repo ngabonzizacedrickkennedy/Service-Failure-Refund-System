@@ -5,7 +5,7 @@ import { Link } from "@/navigation";
 import { motion } from "framer-motion";
 import {
   ArrowRight, Menu, X, Star, Plus, Minus, Check,
-  MapPin, Phone, Mail, Moon, Sun, ImageIcon, Globe,
+  MapPin, Phone, Mail, Moon, Sun, ImageIcon, Globe, Play, Pause,
 } from "lucide-react";
 import { localizeSettings } from "@/lib/homepage";
 import type { HomepageSettings, FeaturedUser } from "@/lib/homepage";
@@ -139,6 +139,35 @@ body:has(.hp) { background: #0A0A0A; }
 @media (min-width: 980px) { .hp-hero-grid { grid-template-columns: 1fr 1fr; gap: 4rem; } }
 .hp-hero-actions { display: flex; flex-wrap: wrap; gap: 0.85rem; margin-top: 2rem; }
 .hp-collage { position: relative; width: 100%; aspect-ratio: 1 / 0.85; min-height: 290px; }
+
+/* Admin-uploaded hero video, layered behind the photo collage. When it is
+   present the tiles are inset so the footage stays visible around them. */
+.hp-collage-video {
+  position: absolute; inset: 0; z-index: 0;
+  border-radius: 18px; overflow: hidden;
+  background: #0A0A0A;
+  box-shadow: 0 26px 60px rgba(0,0,0,0.45);
+}
+.hp-collage-video video { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Darkens the footage so the tiles and their labels stay readable over it. */
+.hp-collage-video::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(10,10,10,0.28) 0%, rgba(10,10,10,0.52) 100%);
+}
+.hp-video-toggle {
+  position: absolute; left: 12px; top: 12px; z-index: 2;
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.4rem 0.8rem; border-radius: 999px; cursor: pointer;
+  background: rgba(10,10,10,0.6); backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.2); color: #fff;
+  font-size: 0.75rem; font-weight: 700;
+  transition: background 0.15s;
+}
+.hp-video-toggle:hover { background: rgba(10,10,10,0.82); }
+
+.hp-collage-stack { position: absolute; inset: 0; z-index: 1; }
+.hp-collage.has-video .hp-collage-stack { inset: 9%; }
+
 .hp-collage figure {
   position: absolute; border-radius: 16px; overflow: hidden; margin: 0;
   box-shadow: 0 26px 60px rgba(0,0,0,0.42);
@@ -337,6 +366,55 @@ function Media({ src, alt }: { src: string; alt: string }) {
 
 /** Counts up on first scroll into view. Starts *at* the target so the real
  *  figure shows even if the observer never fires (no JS, reduced motion). */
+/**
+ * The hero background video, uploaded by an admin in Home Controller. It sits
+ * behind the photo collage and can be paused — autoplaying video with no way
+ * to stop it is a genuine accessibility problem, not just a nicety.
+ */
+function HeroVideo({
+  src,
+  label,
+  onFail,
+}: {
+  src: string;
+  label: string;
+  onFail: () => void;
+}) {
+  const ref = useRef<HTMLVideoElement>(null);
+  const [playing, setPlaying] = useState(true);
+
+  const toggle = () => {
+    const el = ref.current;
+    if (!el) return;
+    if (el.paused) {
+      el.play().catch(() => {});
+      setPlaying(true);
+    } else {
+      el.pause();
+      setPlaying(false);
+    }
+  };
+
+  return (
+    <div className="hp-collage-video">
+      <video
+        ref={ref}
+        src={src}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        onError={onFail}
+      />
+      <button type="button" className="hp-video-toggle" onClick={toggle} aria-label={label}>
+        {playing ? <Pause size={12} /> : <Play size={12} />}
+        {playing ? "Pause" : "Play"}
+      </button>
+    </div>
+  );
+}
+
 function Counter({ target }: { target: string }) {
   const [display, setDisplay] = useState(target);
   const ref = useRef<HTMLSpanElement>(null);
@@ -450,6 +528,10 @@ export default function HomePage() {
   const locale = useLocale();
   const [raw, setRaw] = useState<HomepageSettings | null>(null);
   const [navOpen, setNavOpen] = useState(false);
+  /* A presigned video URL can expire. Tracking the failure here rather than
+     inside HeroVideo lets the collage drop its inset too, instead of sitting
+     small with empty space where the video should have been. */
+  const [videoFailed, setVideoFailed] = useState(false);
 
   useEffect(() => {
     fetch("/api/homepage").then((r) => r.json()).then(setRaw).catch(() => {});
@@ -506,6 +588,7 @@ export default function HomePage() {
   ];
 
   const heroImages = settings.hero.images ?? [];
+  const showHeroVideo = Boolean(settings.hero.videoUrl) && !videoFailed;
   const steps = settings.programmes.items.filter((i) => i.title.trim());
   const rows = settings.differentiators.items.filter((i) => i.title.trim());
   const quotes = settings.testimonials.items.filter((i) => i.quote.trim());
@@ -566,13 +649,25 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="hp-collage hp-reveal" style={{ animationDelay: "0.12s" }}>
-            {heroImages.slice(0, 3).map((img, i) => (
-              <figure key={i}>
-                <Media src={img.url} alt={img.label} />
-                {img.label && <figcaption className="hp-tag">{img.label}</figcaption>}
-              </figure>
-            ))}
+          <div
+            className={`hp-collage hp-reveal ${showHeroVideo ? "has-video" : ""}`}
+            style={{ animationDelay: "0.12s" }}
+          >
+            {showHeroVideo && (
+              <HeroVideo
+                src={settings.hero.videoUrl}
+                label={t("watchVideo")}
+                onFail={() => setVideoFailed(true)}
+              />
+            )}
+            <div className="hp-collage-stack">
+              {heroImages.slice(0, 3).map((img, i) => (
+                <figure key={i}>
+                  <Media src={img.url} alt={img.label} />
+                  {img.label && <figcaption className="hp-tag">{img.label}</figcaption>}
+                </figure>
+              ))}
+            </div>
           </div>
         </div>
       </section>
