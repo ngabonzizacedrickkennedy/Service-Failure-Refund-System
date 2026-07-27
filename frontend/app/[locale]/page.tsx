@@ -140,22 +140,28 @@ body:has(.hp) { background: #0A0A0A; }
 .hp-hero-actions { display: flex; flex-wrap: wrap; gap: 0.85rem; margin-top: 2rem; }
 .hp-collage { position: relative; width: 100%; aspect-ratio: 1 / 0.85; min-height: 290px; }
 
-/* Admin-uploaded hero video, layered behind the photo collage. When it is
-   present the tiles are inset so the footage stays visible around them. */
-.hp-collage-video {
-  position: absolute; inset: 0; z-index: 0;
-  border-radius: 18px; overflow: hidden;
-  background: #0A0A0A;
+/* Admin-uploaded hero video, sitting behind the headline column. Without a
+   video the copy is plain text on the page background; with one it becomes a
+   rounded panel, so the padding only applies in that case. */
+.hp-hero-copy { position: relative; }
+.hp-hero-copy.has-video {
+  padding: 2.75rem 2.5rem;
+  border-radius: 18px;
+  overflow: hidden;
   box-shadow: 0 26px 60px rgba(0,0,0,0.45);
 }
-.hp-collage-video video { width: 100%; height: 100%; object-fit: cover; display: block; }
-/* Darkens the footage so the tiles and their labels stay readable over it. */
-.hp-collage-video::after {
+/* Lifts the copy above the footage. */
+.hp-hero-copy.has-video > *:not(.hp-hero-video) { position: relative; z-index: 1; }
+
+.hp-hero-video { position: absolute; inset: 0; z-index: 0; background: #0A0A0A; }
+.hp-hero-video video { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Darkens the footage so white copy keeps its contrast whatever is playing. */
+.hp-hero-video::after {
   content: ""; position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(180deg, rgba(10,10,10,0.28) 0%, rgba(10,10,10,0.52) 100%);
+  background: linear-gradient(100deg, rgba(8,20,16,0.90) 0%, rgba(8,20,16,0.72) 55%, rgba(8,20,16,0.58) 100%);
 }
 .hp-video-toggle {
-  position: absolute; left: 12px; top: 12px; z-index: 2;
+  position: absolute; right: 12px; bottom: 12px; z-index: 2;
   display: inline-flex; align-items: center; gap: 0.4rem;
   padding: 0.4rem 0.8rem; border-radius: 999px; cursor: pointer;
   background: rgba(10,10,10,0.6); backdrop-filter: blur(6px);
@@ -164,9 +170,6 @@ body:has(.hp) { background: #0A0A0A; }
   transition: background 0.15s;
 }
 .hp-video-toggle:hover { background: rgba(10,10,10,0.82); }
-
-.hp-collage-stack { position: absolute; inset: 0; z-index: 1; }
-.hp-collage.has-video .hp-collage-stack { inset: 9%; }
 
 .hp-collage figure {
   position: absolute; border-radius: 16px; overflow: hidden; margin: 0;
@@ -396,7 +399,7 @@ function HeroVideo({
   };
 
   return (
-    <div className="hp-collage-video">
+    <div className="hp-hero-video">
       <video
         ref={ref}
         src={src}
@@ -639,7 +642,14 @@ export default function HomePage() {
       {/* ── Hero ── */}
       <section className="hp-hero">
         <div className="hp-wrap hp-hero-grid">
-          <div className="hp-reveal">
+          <div className={`hp-hero-copy hp-reveal ${showHeroVideo ? "has-video" : ""}`}>
+            {showHeroVideo && (
+              <HeroVideo
+                src={settings.hero.videoUrl}
+                label={t("watchVideo")}
+                onFail={() => setVideoFailed(true)}
+              />
+            )}
             <p className="hp-eyebrow">{settings.hero.eyebrow}</p>
             <h1 className="hp-h1">{settings.hero.title}</h1>
             <p className="hp-lead" style={{ maxWidth: 540 }}>{settings.hero.subtitle}</p>
@@ -649,25 +659,13 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div
-            className={`hp-collage hp-reveal ${showHeroVideo ? "has-video" : ""}`}
-            style={{ animationDelay: "0.12s" }}
-          >
-            {showHeroVideo && (
-              <HeroVideo
-                src={settings.hero.videoUrl}
-                label={t("watchVideo")}
-                onFail={() => setVideoFailed(true)}
-              />
-            )}
-            <div className="hp-collage-stack">
-              {heroImages.slice(0, 3).map((img, i) => (
-                <figure key={i}>
-                  <Media src={img.url} alt={img.label} />
-                  {img.label && <figcaption className="hp-tag">{img.label}</figcaption>}
-                </figure>
-              ))}
-            </div>
+          <div className="hp-collage hp-reveal" style={{ animationDelay: "0.12s" }}>
+            {heroImages.slice(0, 3).map((img, i) => (
+              <figure key={i}>
+                <Media src={img.url} alt={img.label} />
+                {img.label && <figcaption className="hp-tag">{img.label}</figcaption>}
+              </figure>
+            ))}
           </div>
         </div>
       </section>
