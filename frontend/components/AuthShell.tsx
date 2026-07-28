@@ -1,15 +1,14 @@
 "use client";
 
 import { forwardRef, useState } from "react";
-import { Eye, EyeOff, Lock } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { Link } from "@/navigation";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 /**
- * Shared chrome for the four auth screens: the solid brand-green field, the
- * top bar, and the centred white card. Styling lives in the `.auth-*` block
- * of app/globals.css so all four pages stay in lockstep.
+ * Shared chrome for the four auth screens: the yellow brand wash, the top bar,
+ * and the centred content column. Styling lives in the `.auth-*` block of
+ * app/globals.css so all four pages stay in lockstep.
  */
 export function AuthShell({
   navRight,
@@ -21,13 +20,16 @@ export function AuthShell({
 }) {
   return (
     <div className="auth-page">
+      <div className="auth-wash" aria-hidden="true" />
+
       <header className="auth-nav">
         <Link href="/" className="auth-wordmark">
           SSFRS
         </Link>
         <div className="auth-nav-right">
           {navRight}
-          <LanguageSwitcher variant="dark" />
+          {/* Light variant: the nav sits on yellow, so its ink must be dark. */}
+          <LanguageSwitcher variant="light" />
         </div>
       </header>
 
@@ -59,18 +61,17 @@ export function AuthField({
 }
 
 type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
-  icon?: LucideIcon;
   invalid?: boolean;
 };
 
+/** Plain square field — the reference design carries no leading icon. */
 export const AuthInput = forwardRef<HTMLInputElement, InputProps>(
-  function AuthInput({ icon: Icon, invalid, className = "", ...rest }, ref) {
+  function AuthInput({ invalid, className = "", ...rest }, ref) {
     return (
       <div className="auth-input-wrap">
-        {Icon && <Icon className="auth-input-icon" />}
         <input
           ref={ref}
-          className={`auth-input ${Icon ? "" : "no-icon"} ${invalid ? "is-invalid" : ""} ${className}`
+          className={`auth-input ${invalid ? "is-invalid" : ""} ${className}`
             .replace(/\s+/g, " ")
             .trim()}
           {...rest}
@@ -80,7 +81,7 @@ export const AuthInput = forwardRef<HTMLInputElement, InputProps>(
   }
 );
 
-type PasswordProps = Omit<InputProps, "type" | "icon"> & {
+type PasswordProps = InputProps & {
   showLabel?: string;
   hideLabel?: string;
 };
@@ -94,7 +95,6 @@ export const AuthPasswordInput = forwardRef<HTMLInputElement, PasswordProps>(
     const [visible, setVisible] = useState(false);
     return (
       <div className="auth-input-wrap">
-        <Lock className="auth-input-icon" />
         <input
           ref={ref}
           type={visible ? "text" : "password"}
@@ -107,7 +107,7 @@ export const AuthPasswordInput = forwardRef<HTMLInputElement, PasswordProps>(
           onClick={() => setVisible((v) => !v)}
           aria-label={visible ? hideLabel : showLabel}
         >
-          {visible ? <EyeOff size={15} /> : <Eye size={15} />}
+          {visible ? <EyeOff size={19} /> : <Eye size={19} />}
         </button>
       </div>
     );

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Mail, ArrowLeft, MailCheck } from "lucide-react";
+import { ArrowLeft, MailCheck } from "lucide-react";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
 import { authService } from "@/lib/authService";
@@ -95,7 +95,6 @@ export default function ForgotPasswordPage() {
             <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
               <AuthField error={errors.email?.message}>
                 <AuthInput
-                  icon={Mail}
                   type="email"
                   autoComplete="email"
                   placeholder={t("emailLabel")}

@@ -5,7 +5,7 @@ import { useRouter, Link } from "@/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Mail, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
 import { authService } from "@/lib/authService";
@@ -104,7 +104,6 @@ export default function LoginPage() {
             <form className="auth-form" onSubmit={loginForm.handleSubmit(onLoginSubmit)}>
               <AuthField error={loginForm.formState.errors.email?.message}>
                 <AuthInput
-                  icon={Mail}
                   type="email"
                   autoComplete="email"
                   placeholder={t("emailLabel")}

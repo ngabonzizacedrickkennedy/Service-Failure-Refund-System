@@ -5,7 +5,7 @@ import { useRouter, Link } from "@/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Mail, User, Phone, Briefcase, HardHat } from "lucide-react";
+import { Briefcase, HardHat } from "lucide-react";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
 import { authService } from "@/lib/authService";
@@ -90,7 +90,6 @@ export default function RegisterPage() {
         <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
           <AuthField error={errors.fullName?.message}>
             <AuthInput
-              icon={User}
               type="text"
               autoComplete="name"
               placeholder={t("fullNameLabel")}
@@ -102,7 +101,6 @@ export default function RegisterPage() {
 
           <AuthField error={errors.email?.message}>
             <AuthInput
-              icon={Mail}
               type="email"
               autoComplete="email"
               placeholder={t("emailLabel")}
@@ -124,7 +122,6 @@ export default function RegisterPage() {
 
           <AuthField error={errors.phone?.message}>
             <AuthInput
-              icon={Phone}
               type="tel"
               autoComplete="tel"
               placeholder={t("phoneLabel")}
@@ -145,7 +142,7 @@ export default function RegisterPage() {
                   aria-pressed={selectedRole === value}
                   className={`auth-segment ${selectedRole === value ? "is-active" : ""}`}
                 >
-                  <Icon size={15} />
+                  <Icon size={18} />
                   {label}
                 </button>
               ))}
