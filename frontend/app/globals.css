@@ -133,7 +133,7 @@
 .auth-wash {
   position: absolute;
   inset: 0 0 auto 0;
-  height: 320px;
+  height: 260px;
   z-index: 0;
   pointer-events: none;
   background: linear-gradient(
@@ -158,13 +158,13 @@
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
-  padding: 1.75rem 3rem;
+  padding: 1.25rem 2.25rem;
 }
 
 .auth-wordmark {
-  font-size: 1.5rem;
+  font-size: 1.125rem;
   font-weight: 700;
-  letter-spacing: 0.24em;
+  letter-spacing: 0.22em;
   color: var(--auth-ink);
   text-decoration: none;
   white-space: nowrap;
@@ -173,11 +173,11 @@
 .auth-nav-right {
   display: flex;
   align-items: center;
-  gap: 1.75rem;
+  gap: 1.25rem;
 }
 
 .auth-nav-link {
-  font-size: 1.0625rem;
+  font-size: 0.9375rem;
   font-weight: 700;
   color: var(--auth-ink);
   text-decoration: none;
@@ -200,45 +200,45 @@
   z-index: 2;
   flex: 1;
   width: 100%;
-  padding: 4.5rem 1.5rem 4.5rem;
+  padding: 3.25rem 1.5rem 3.5rem;
   display: flex;
   justify-content: center;
 }
 
 .auth-card {
   width: 100%;
-  max-width: 600px;
+  max-width: 400px;
 }
 
 .auth-title {
-  font-size: clamp(2.75rem, 5vw, 5rem);
+  font-size: clamp(1.75rem, 3.2vw, 2.5rem);
   font-weight: 800;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.03em;
   line-height: 1.02;
   text-align: center;
   color: var(--auth-ink);
-  margin-bottom: 0.65rem;
+  margin-bottom: 0.45rem;
 }
 
 .auth-subtitle {
   text-align: center;
-  font-size: 1.0625rem;
-  line-height: 1.6;
+  font-size: 0.875rem;
+  line-height: 1.55;
   font-weight: 500;
   color: var(--auth-muted);
-  margin: 0 auto 2.75rem;
-  max-width: 34rem;
+  margin: 0 auto 1.85rem;
+  max-width: 26rem;
 }
 
 /* ── Form ── */
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.6rem;
   width: 100%;
 }
 
-.auth-field { display: flex; flex-direction: column; gap: 0.35rem; }
+.auth-field { display: flex; flex-direction: column; gap: 0.28rem; }
 
 /* Fields are label-less like the reference; the label text becomes the
    placeholder and stays in the DOM here for screen readers. */
@@ -258,12 +258,12 @@
 
 .auth-input {
   width: 100%;
-  height: 52px;
+  height: 42px;
   border: 1px solid var(--auth-border);
   border-radius: 4px;
   background: #ffffff;
-  padding: 0 1.15rem;
-  font-size: 1rem;
+  padding: 0 0.9rem;
+  font-size: 0.875rem;
   font-weight: 500;
   color: var(--auth-ink);
   outline: none;
@@ -275,7 +275,7 @@
   border-color: var(--auth-ink);
   box-shadow: 0 0 0 3px rgba(10, 10, 10, 0.08);
 }
-.auth-input.has-toggle { padding-right: 3.25rem; }
+.auth-input.has-toggle { padding-right: 2.6rem; }
 .auth-input.is-invalid { border-color: var(--auth-danger); }
 .auth-input.is-invalid:focus { box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.10); }
 
@@ -290,7 +290,7 @@
 
 .auth-toggle {
   position: absolute;
-  right: 1.15rem;
+  right: 0.9rem;
   display: flex;
   background: none;
   border: none;
@@ -301,7 +301,7 @@
 }
 .auth-toggle:hover { color: var(--auth-ink); }
 
-.auth-error { font-size: 0.8125rem; font-weight: 500; color: var(--auth-danger); }
+.auth-error { font-size: 0.75rem; font-weight: 500; color: var(--auth-danger); }
 
 .auth-meta-row {
   display: flex;
@@ -310,7 +310,7 @@
 }
 
 .auth-quiet-link {
-  font-size: 1rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--auth-muted);
   text-decoration: none;
@@ -321,21 +321,21 @@
 /* ── Outlined pill CTA ── */
 .auth-submit {
   align-self: center;
-  min-width: 224px;
-  height: 62px;
-  margin-top: 3rem;
-  padding: 0 2.5rem;
+  min-width: 160px;
+  height: 44px;
+  margin-top: 1.85rem;
+  padding: 0 1.85rem;
   border-radius: 999px;
   border: 1.5px solid var(--auth-ink);
   background: #ffffff;
   color: var(--auth-ink);
-  font-size: 1.0625rem;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
   transition: background-color 0.18s, color 0.18s, border-color 0.18s;
 }
 .auth-submit:hover:not(:disabled) {
@@ -350,8 +350,8 @@
 }
 
 .auth-spinner {
-  width: 15px;
-  height: 15px;
+  width: 13px;
+  height: 13px;
   border-radius: 50%;
   border: 2px solid currentColor;
   border-top-color: transparent;
@@ -360,20 +360,20 @@
 }
 
 /* ── Segmented choice (role picker) ── */
-.auth-segmented { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; }
+.auth-segmented { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
 
 .auth-segment {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  height: 52px;
-  padding: 0 1rem;
+  height: 42px;
+  padding: 0 0.85rem;
   border-radius: 4px;
   border: 1px solid var(--auth-border);
   background: #ffffff;
   color: var(--auth-muted);
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s, background-color 0.15s;
@@ -388,9 +388,9 @@
 
 /* ── Footer line ── */
 .auth-footer {
-  margin-top: 2.25rem;
+  margin-top: 1.5rem;
   text-align: center;
-  font-size: 1.0625rem;
+  font-size: 0.875rem;
   font-weight: 500;
   color: var(--auth-muted);
 }
@@ -408,8 +408,8 @@
   width: fit-content;
   align-items: center;
   gap: 0.4rem;
-  margin: 0 auto 1.5rem;
-  font-size: 0.9375rem;
+  margin: 0 auto 1.1rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--auth-muted);
   text-decoration: none;
@@ -419,10 +419,10 @@
 
 /* ── Confirmation state ── */
 .auth-badge {
-  width: 68px;
-  height: 68px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
-  margin: 0 auto 1.5rem;
+  margin: 0 auto 1.1rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -430,15 +430,15 @@
   border: 1px solid rgba(10, 10, 10, 0.12);
   color: var(--auth-ink);
 }
-.auth-badge > svg { width: 28px; height: 28px; }
+.auth-badge > svg { width: 22px; height: 22px; }
 
 .auth-chip {
   display: inline-block;
-  padding: 0.4rem 1rem;
+  padding: 0.32rem 0.85rem;
   border-radius: 4px;
   background: #F7F7F4;
   border: 1px solid var(--auth-border);
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 700;
   color: var(--auth-ink);
   word-break: break-all;
@@ -446,37 +446,35 @@
 
 /* ── OTP entry ── */
 .auth-input.auth-otp {
-  height: 60px;
+  height: 50px;
   text-align: center;
   font-family: ui-monospace, 'Courier New', monospace;
-  font-size: 1.5rem;
+  font-size: 1.1875rem;
   font-weight: 700;
-  letter-spacing: 0.5em;
+  letter-spacing: 0.45em;
   /* Offsets the trailing letter-space so the digits sit optically centred. */
-  text-indent: 0.5em;
-  padding-left: 1.15rem;
-  padding-right: 1.15rem;
+  text-indent: 0.45em;
+  padding-left: 0.9rem;
+  padding-right: 0.9rem;
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 900px) {
-  .auth-nav { padding: 1.35rem 1.75rem; }
-  .auth-wordmark { font-size: 1.125rem; letter-spacing: 0.2em; }
-  .auth-nav-right { gap: 1.15rem; }
-  .auth-nav-link { font-size: 0.9375rem; }
-  .auth-main { padding: 3rem 1.5rem 3.5rem; }
+  .auth-nav { padding: 1.1rem 1.5rem; }
+  .auth-wordmark { font-size: 1rem; letter-spacing: 0.2em; }
+  .auth-nav-right { gap: 1rem; }
+  .auth-main { padding: 2.5rem 1.5rem 3rem; }
 }
 
 @media (max-width: 640px) {
-  .auth-nav { padding: 1rem 1.15rem; gap: 0.75rem; }
-  .auth-wordmark { font-size: 0.9375rem; letter-spacing: 0.18em; }
-  .auth-nav-right { gap: 0.85rem; }
+  .auth-nav { padding: 0.9rem 1.1rem; gap: 0.75rem; }
+  .auth-wordmark { font-size: 0.875rem; letter-spacing: 0.18em; }
+  .auth-nav-right { gap: 0.8rem; }
   .auth-nav-link { font-size: 0.875rem; }
-  .auth-wash { height: 240px; }
-  .auth-main { padding: 2.25rem 1.15rem 3rem; }
-  .auth-subtitle { font-size: 0.9375rem; margin-bottom: 2rem; }
-  .auth-input, .auth-segment { height: 48px; font-size: 0.9375rem; }
-  .auth-submit { width: 100%; height: 56px; margin-top: 2rem; }
+  .auth-wash { height: 200px; }
+  .auth-main { padding: 2rem 1.15rem 2.5rem; }
+  .auth-subtitle { margin-bottom: 1.5rem; }
+  .auth-submit { width: 100%; }
   .auth-segmented { grid-template-columns: 1fr; }
 }
