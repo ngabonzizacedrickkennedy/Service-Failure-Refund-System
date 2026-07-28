@@ -145,7 +145,7 @@ export default function RegisterPage() {
                   aria-pressed={selectedRole === value}
                   className={`auth-segment ${selectedRole === value ? "is-active" : ""}`}
                 >
-                  <Icon size={18} />
+                  <Icon size={15} />
                   {label}
                 </button>
               ))}

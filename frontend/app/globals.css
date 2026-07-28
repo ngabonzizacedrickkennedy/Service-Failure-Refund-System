@@ -102,51 +102,29 @@
 /* ─────────────────────────────────────────────────────────────
    Auth pages (sign in / sign up / forgot / reset)
 
-   A flat brand band across the top that dissolves into the page.
-   The wash fades on ALPHA ONLY — one hue over white, never through
-   invented mid-tones, which is what makes a gradient read as fake.
+   One flat brand-green field behind a single white card. No washes,
+   no gradients, no green-to-white fade — the colour is either the
+   backdrop or it isn't, which is what makes it read as solid.
    Theme-independent: identical in light and dark mode.
    ───────────────────────────────────────────────────────────── */
 :root {
   --auth-brand: #14332B;
+  --auth-brand-hover: #1D4A3C;
   --auth-brand-rgb: 20, 51, 43;
   --auth-ink: #0E1A15;
   --auth-muted: #6B7671;
-  --auth-border: #D2D8D5;
-  --auth-border-hover: #A8B2AD;
+  --auth-border: #DDE2E0;
+  --auth-border-hover: #B4BDB9;
   --auth-danger: #DC2626;
 }
 
 .auth-page {
   position: relative;
   min-height: 100vh;
-  background: #ffffff;
+  background: var(--auth-brand);
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
-}
-
-.auth-wash {
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 300px;
-  z-index: 0;
-  pointer-events: none;
-  /* Flat across the bar, then a long eased fall-off. Many close stops keep
-     it from banding; a short ramp reads as a blurred edge, not a wash. */
-  background: linear-gradient(
-    180deg,
-    #14332B 0%,
-    #14332B 36%,
-    #20463A 44%,
-    #376354 52%,
-    #5C8677 59%,
-    #8CAFA1 65%,
-    #B9D0C6 72%,
-    #DCE9E3 80%,
-    #F2F7F5 89%,
-    #ffffff 97%
-  );
 }
 
 /* ── Top bar ── */
@@ -157,13 +135,13 @@
   align-items: center;
   justify-content: space-between;
   gap: 1.25rem;
-  padding: 1.6rem 2.5rem;
+  padding: 1.15rem 2rem;
 }
 
 .auth-wordmark {
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 700;
-  letter-spacing: 0.3em;
+  letter-spacing: 0.28em;
   color: #ffffff;
   text-decoration: none;
   white-space: nowrap;
@@ -172,18 +150,18 @@
 .auth-nav-right {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .auth-nav-link {
-  font-size: 0.9375rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.88);
   text-decoration: none;
   white-space: nowrap;
-  transition: opacity 0.15s;
+  transition: color 0.15s;
 }
-.auth-nav-link:hover { opacity: 0.8; }
+.auth-nav-link:hover { color: #ffffff; }
 
 /* ── Centre column ── */
 .auth-main {
@@ -191,46 +169,51 @@
   z-index: 2;
   flex: 1;
   width: 100%;
-  max-width: 660px;
-  margin: 0 auto;
-  /* Puts the heading at ~25% of the fold, where the reference sits it. */
-  padding: 8rem 1.5rem 4rem;
+  padding: 1.5rem 1.25rem 3.5rem;
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  align-items: center;
+  justify-content: center;
+}
+
+/* `margin: auto` rather than flex centring alone: a tall card (sign-up)
+   then scrolls from its top instead of being clipped by the viewport. */
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  margin: auto;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 2.25rem 2rem 2rem;
 }
 
 .auth-title {
-  font-size: clamp(2.15rem, 4.4vw, 3.25rem);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.05;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
   text-align: center;
   color: var(--auth-ink);
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.4rem;
 }
 
 .auth-subtitle {
   text-align: center;
-  font-size: 0.9375rem;
-  line-height: 1.6;
+  font-size: 0.8125rem;
+  line-height: 1.55;
   font-weight: 500;
   color: var(--auth-muted);
-  margin: 0 auto 2.5rem;
-  max-width: 32rem;
+  margin: 0 auto 1.5rem;
 }
 
 /* ── Form ── */
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.6rem;
   width: 100%;
-  max-width: 440px;
-  margin: 0 auto;
 }
 
-.auth-field { display: flex; flex-direction: column; gap: 0.3rem; }
+.auth-field { display: flex; flex-direction: column; gap: 0.25rem; }
 
 /* Fields are label-less like the reference; the label text becomes the
    placeholder and stays in the DOM here for screen readers. */
@@ -250,12 +233,12 @@
 
 .auth-input {
   width: 100%;
-  height: 46px;
+  height: 40px;
   border: 1px solid var(--auth-border);
-  border-radius: 6px;
+  border-radius: 8px;
   background: #ffffff;
-  padding: 0 1rem 0 2.75rem;
-  font-size: 0.9375rem;
+  padding: 0 0.875rem 0 2.4rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: var(--auth-ink);
   outline: none;
@@ -267,8 +250,8 @@
   border-color: var(--auth-brand);
   box-shadow: 0 0 0 3px rgba(var(--auth-brand-rgb), 0.10);
 }
-.auth-input.no-icon { padding-left: 1rem; }
-.auth-input.has-toggle { padding-right: 2.75rem; }
+.auth-input.no-icon { padding-left: 0.875rem; }
+.auth-input.has-toggle { padding-right: 2.4rem; }
 .auth-input.is-invalid { border-color: var(--auth-danger); }
 .auth-input.is-invalid:focus { box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.10); }
 
@@ -283,16 +266,16 @@
 
 .auth-input-icon {
   position: absolute;
-  left: 1rem;
-  width: 16px;
-  height: 16px;
+  left: 0.85rem;
+  width: 15px;
+  height: 15px;
   color: #96A09B;
   pointer-events: none;
 }
 
 .auth-toggle {
   position: absolute;
-  right: 0.95rem;
+  right: 0.85rem;
   display: flex;
   background: none;
   border: none;
@@ -303,16 +286,16 @@
 }
 .auth-toggle:hover { color: var(--auth-brand); }
 
-.auth-error { font-size: 0.75rem; font-weight: 500; color: var(--auth-danger); }
+.auth-error { font-size: 0.7rem; font-weight: 500; color: var(--auth-danger); }
 
 .auth-meta-row {
   display: flex;
   justify-content: flex-end;
-  margin-top: 0.15rem;
+  margin-top: 0.1rem;
 }
 
 .auth-quiet-link {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--auth-muted);
   text-decoration: none;
@@ -320,40 +303,37 @@
 }
 .auth-quiet-link:hover { color: var(--auth-brand); }
 
-/* ── Pill CTA ── */
+/* ── Solid CTA ── */
 .auth-submit {
-  align-self: center;
-  min-width: 175px;
-  margin-top: 2.5rem;
-  padding: 0.8rem 2.5rem;
-  border-radius: 999px;
-  border: 1.5px solid var(--auth-ink);
-  background: #ffffff;
-  color: var(--auth-ink);
-  font-size: 0.9375rem;
+  width: 100%;
+  height: 42px;
+  margin-top: 1rem;
+  padding: 0 1.25rem;
+  border-radius: 8px;
+  border: none;
+  background: var(--auth-brand);
+  color: #ffffff;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.55rem;
-  transition: background-color 0.18s, color 0.18s, border-color 0.18s;
+  gap: 0.5rem;
+  transition: background-color 0.18s;
 }
 .auth-submit:hover:not(:disabled) {
-  background: var(--auth-brand);
-  border-color: var(--auth-brand);
-  color: #ffffff;
+  background: var(--auth-brand-hover);
 }
 .auth-submit:disabled {
   cursor: not-allowed;
-  border-color: var(--auth-border);
-  color: #9AA39F;
-  background: #F7F8F8;
+  background: #A9B4B0;
+  color: #ffffff;
 }
 
 .auth-spinner {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
   border-radius: 50%;
   border: 2px solid currentColor;
   border-top-color: transparent;
@@ -362,20 +342,20 @@
 }
 
 /* ── Segmented choice (role picker) ── */
-.auth-segmented { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+.auth-segmented { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
 
 .auth-segment {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  height: 46px;
-  padding: 0 1rem;
-  border-radius: 6px;
+  gap: 0.4rem;
+  height: 40px;
+  padding: 0 0.75rem;
+  border-radius: 8px;
   border: 1px solid var(--auth-border);
   background: #ffffff;
   color: var(--auth-muted);
-  font-size: 0.9375rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s, background-color 0.15s;
@@ -383,23 +363,23 @@
 .auth-segment:hover { border-color: var(--auth-border-hover); color: var(--auth-ink); }
 .auth-segment.is-active {
   border-color: var(--auth-brand);
-  background: rgba(var(--auth-brand-rgb), 0.05);
-  color: var(--auth-brand);
+  background: var(--auth-brand);
+  color: #ffffff;
   font-weight: 600;
 }
 
 /* ── Footer line ── */
 .auth-footer {
-  margin-top: 2rem;
+  margin-top: 1.35rem;
   text-align: center;
-  font-size: 0.9375rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: var(--auth-muted);
 }
 
 .auth-footer-link {
   font-weight: 700;
-  color: var(--auth-ink);
+  color: var(--auth-brand);
   text-decoration: none;
 }
 .auth-footer-link:hover { text-decoration: underline; text-underline-offset: 3px; }
@@ -409,9 +389,9 @@
   display: flex;
   width: fit-content;
   align-items: center;
-  gap: 0.4rem;
-  margin: 0 auto 1.25rem;
-  font-size: 0.875rem;
+  gap: 0.35rem;
+  margin: 0 auto 1rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--auth-muted);
   text-decoration: none;
@@ -421,25 +401,25 @@
 
 /* ── Confirmation state ── */
 .auth-badge {
-  width: 60px;
-  height: 60px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  margin: 0 auto 1.5rem;
+  margin: 0 auto 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(var(--auth-brand-rgb), 0.06);
-  border: 1px solid rgba(var(--auth-brand-rgb), 0.18);
-  color: var(--auth-brand);
+  background: var(--auth-brand);
+  color: #ffffff;
 }
+.auth-badge > svg { width: 22px; height: 22px; }
 
 .auth-chip {
   display: inline-block;
-  padding: 0.35rem 0.9rem;
-  border-radius: 6px;
-  background: #F5F7F6;
+  padding: 0.3rem 0.75rem;
+  border-radius: 8px;
+  background: #F4F6F5;
   border: 1px solid var(--auth-border);
-  font-size: 0.9375rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   color: var(--auth-ink);
   word-break: break-all;
@@ -447,28 +427,27 @@
 
 /* ── OTP entry ── */
 .auth-input.auth-otp {
+  height: 46px;
   text-align: center;
   font-family: ui-monospace, 'Courier New', monospace;
-  font-size: 1.25rem;
+  font-size: 1.0625rem;
   font-weight: 700;
-  letter-spacing: 0.5em;
+  letter-spacing: 0.45em;
   /* Offsets the trailing letter-space so the digits sit optically centred. */
-  text-indent: 0.5em;
-  padding-left: 1rem;
-  padding-right: 1rem;
+  text-indent: 0.45em;
+  padding-left: 0.875rem;
+  padding-right: 0.875rem;
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 640px) {
-  .auth-nav { padding: 1rem 1.25rem; gap: 0.75rem; }
+  .auth-nav { padding: 1rem 1.1rem; gap: 0.75rem; }
   .auth-wordmark { font-size: 0.8125rem; letter-spacing: 0.22em; }
-  .auth-nav-right { gap: 0.85rem; }
-  .auth-wash { height: 230px; }
-  .auth-main { padding: 5.5rem 1.25rem 3rem; }
-  .auth-subtitle { margin-bottom: 2rem; }
+  .auth-nav-right { gap: 0.75rem; }
+  .auth-main { padding: 1rem 1rem 2.5rem; }
+  .auth-card { padding: 1.75rem 1.35rem 1.5rem; border-radius: 10px; }
   .auth-segmented { grid-template-columns: 1fr; }
-  .auth-submit { width: 100%; }
 }
 
 

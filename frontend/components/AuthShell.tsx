@@ -7,9 +7,9 @@ import { Link } from "@/navigation";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 /**
- * Shared chrome for the four auth screens: the indigo brand wash, the top bar,
- * and the centred content column. Styling lives in the `.auth-*` block of
- * app/globals.css so all four pages stay in lockstep.
+ * Shared chrome for the four auth screens: the solid brand-green field, the
+ * top bar, and the centred white card. Styling lives in the `.auth-*` block
+ * of app/globals.css so all four pages stay in lockstep.
  */
 export function AuthShell({
   navRight,
@@ -21,8 +21,6 @@ export function AuthShell({
 }) {
   return (
     <div className="auth-page">
-      <div className="auth-wash" aria-hidden="true" />
-
       <header className="auth-nav">
         <Link href="/" className="auth-wordmark">
           SSFRS
@@ -33,7 +31,9 @@ export function AuthShell({
         </div>
       </header>
 
-      <main className="auth-main">{children}</main>
+      <main className="auth-main">
+        <div className="auth-card">{children}</div>
+      </main>
     </div>
   );
 }
@@ -107,7 +107,7 @@ export const AuthPasswordInput = forwardRef<HTMLInputElement, PasswordProps>(
           onClick={() => setVisible((v) => !v)}
           aria-label={visible ? hideLabel : showLabel}
         >
-          {visible ? <EyeOff size={17} /> : <Eye size={17} />}
+          {visible ? <EyeOff size={15} /> : <Eye size={15} />}
         </button>
       </div>
     );
