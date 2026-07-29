@@ -352,11 +352,11 @@ public class ClaimServiceImpl implements ClaimService {
 
     private ClaimResponse toResponse(Claim c) {
         List<String> docUrls = c.getProofDocumentKeys().stream()
-                .map(s3UploadService::generatePresignedUrl)
+                .map(s3UploadService::generateFileUrl)
                 .collect(Collectors.toList());
 
         List<String> ghostUrls = c.getGhostProjectImageKeys().stream()
-                .map(s3UploadService::generatePresignedUrl)
+                .map(s3UploadService::generateFileUrl)
                 .collect(Collectors.toList());
 
         return ClaimResponse.builder()
@@ -369,7 +369,7 @@ public class ClaimServiceImpl implements ClaimService {
                 .proofDocumentUrls(docUrls)
                 .ghostProjectImageUrls(ghostUrls)
                 .messageEvidence(c.getMessageEvidenceJson())
-                .geotagPhotoUrl(s3UploadService.generatePresignedUrl(c.getGeotagPhotoKey()))
+                .geotagPhotoUrl(s3UploadService.generateFileUrl(c.getGeotagPhotoKey()))
                 .extractedLat(c.getExtractedLat())
                 .extractedLon(c.getExtractedLon())
                 .extractedPhotoTimestamp(c.getExtractedPhotoTimestamp())

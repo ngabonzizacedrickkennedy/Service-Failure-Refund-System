@@ -499,7 +499,7 @@ public class ProjectServiceImpl implements ProjectService {
                 .stream()
                 .map(img -> ProjectImageResponse.builder()
                         .id(img.getId())
-                        .imageUrl(s3UploadService.generatePresignedUrl(img.getImageKey()))
+                        .imageUrl(s3UploadService.generateFileUrl(img.getImageKey()))
                         .description(img.getDescription())
                         .displayOrder(img.getDisplayOrder())
                         .build())

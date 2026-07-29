@@ -88,7 +88,7 @@ public class JustificationController {
     private JustificationResponse toResponse(WorkerJustification j) {
         // Convert stored S3 keys to time-limited presigned URLs (same pattern as claim service)
         List<String> presignedUrls = j.getEvidenceUrls().stream()
-                .map(s3UploadService::generatePresignedUrl)
+                .map(s3UploadService::generateFileUrl)
                 .filter(java.util.Objects::nonNull)
                 .collect(java.util.stream.Collectors.toList());
 

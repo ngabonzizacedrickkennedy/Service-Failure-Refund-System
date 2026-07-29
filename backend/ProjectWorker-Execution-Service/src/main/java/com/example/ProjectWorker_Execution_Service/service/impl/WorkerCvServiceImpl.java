@@ -215,7 +215,7 @@ public class WorkerCvServiceImpl implements WorkerCvService {
                 .workerId(cv.getWorkerId())
                 .workerName(cv.getWorkerName())
                 .workerEmail(cv.getWorkerEmail())
-                .cvFileUrl(s3UploadService.generatePresignedUrl(cv.getCvFileKey()))
+                .cvFileUrl(s3UploadService.generateFileUrl(cv.getCvFileKey()))
                 .yearsOfExperience(cv.getYearsOfExperience())
                 .specialization(cv.getSpecialization())
                 .additionalCredentials(cv.getAdditionalCredentials())
